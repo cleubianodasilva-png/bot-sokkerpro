@@ -1927,7 +1927,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
 
     # Adiciona ⚽ na entrada para mercados de gol
     if mercado in ("HT", "LIMITEHT", "BTTS", "OFT", "OVERGOAL"):
-        entrada = str(entrada).rstrip() + "⚽"
+        entrada = str(entrada).rstrip() + "⚽️"
     
     titles = {
         "HT": "⚽️🔥OVER GOL INTERVALO🔥⚽️",
