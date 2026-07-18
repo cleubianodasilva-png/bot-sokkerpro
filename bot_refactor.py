@@ -2003,17 +2003,18 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     appm = round(atq_max / minuto, 2) if minuto > 0 else 0
     quem = "do Mandante" if atq_per_h > atq_per_a else ("do Visitante" if atq_per_a > atq_per_h else "de ambas equipes")
     
-    # Thresholds de Alerta
-    if appm >= 1.0: alerta = f"Pressão muito alta! Forte domínio {quem}."
-    elif appm >= 0.6: 
-        periodo = "1º tempo" if minuto <= 45 else "2º tempo"
-        alerta = f"Pressão crescente {quem} no {periodo}."
-    elif appm >= 0.5: alerta = f"Domínio absoluto {quem} no {'1º' if minuto <= 45 else '2º'} tempo."
-    else: alerta = "Partida com ritmo moderado."
+    # Thresholds e Alertas idênticos à imagem (media/1784355200105.jpg)
+    if appm >= 1.0: 
+        alerta = f"Pressão muito alta! Forte domínio {quem}."
+    elif appm >= 0.5:
+        alerta = f"Partida com bastante pressão {quem}."
+    else:
+        alerta = "Partida com ritmo moderado."
 
-    # Títulos com os emojis exatos das imagens
+    # Título EXATO com as setas vermelhas e fogo (Emoji de bandeira triangular 🚩)
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
-        title = f"🚩🔥{mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')}🔥🚩"
+        nome_m = mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')
+        title = f"🚩🔥{nome_m}🔥🚩"
     else:
         titles_map = {
             "HT": "OVER GOL INTERVALO",
