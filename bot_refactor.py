@@ -1521,14 +1521,13 @@ def get_favorito_odds(home, away, fid=None, league=None):
 # ═══════════════════════════════════════════════════════════════════════════════
 def get_odd_favorito_num(home, away, fid=None, league=None, fid_raw=None):
     """Retorna a odd decimal do favorito (numero). Usa SokkerPro se tiver fid_raw, depois ESPN, depois Odds API."""
-    if fid_raw:
+    if fid_raw and str(fid_raw).replace("skp_", "").isdigit():
         try:
-            if r.status_code == 200:
-                odds = r.json().get("odds", {})
-                oh = float(odds.get("home_win") or 99)
-                oa = float(odds.get("away_win") or 99)
-                if oh < 90 and oa < 90:
-                    return min(oh, oa)
+            skp_odds = skp.get_odds_sokkerpro(fid_raw, home, away)
+            if skp_odds and len(skp_odds) == 3:
+                odd_h, odd_d, odd_a = skp_odds
+                if odd_h > 0 and odd_a > 0:
+                    return min(odd_h, odd_a)
         except: pass
     
     if fid and league:
@@ -2194,7 +2193,7 @@ def get_media_gols_historica(home_id, away_id):
 def run():
     # ─── ISOLAMENTO POR REPOSITÓRIO: cada bot usa SÓ sua fonte ───
     _repo_atual = os.environ.get("GITHUB_REPOSITORY", "").lower()
-    if "sokkerpro" in _repo_atual:
+    if "bzzoiro" in _repo_atual:  # bzzoiro-bot = SokkerPro
         BOT_SOURCE = "sokkerpro"
     elif "maquina-de-greens" in _repo_atual:
         BOT_SOURCE = "espn"
