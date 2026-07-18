@@ -2466,8 +2466,7 @@ def run():
                     if isinstance(sb_name, dict):
                         if (sb_name.get("chutes_tot_h", 0) > 0 or sb_name.get("chutes_tot_a", 0) > 0 or
                               sb_name.get("ataques_perigosos_h", 0) > 0 or sb_name.get("ataques_perigosos_a", 0) > 0 or
-                              sb_name.get("chutes_gol_h", 0) > 0 or sb_name.get("chutes_gol_a", 0) > 0 or
-                              sb_name.get("escanteios_h", 0) > 0 or sb_name.get("escanteios_a", 0) > 0):
+                              sb_name.get("chutes_gol_h", 0) > 0 or sb_name.get("chutes_gol_a", 0) > 0):
                             stats = sb_name
                             print(f"[BZZ-NAME] Stats via nome OK: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')} | chutes {sb_name.get('chutes_tot_h')}x{sb_name.get('chutes_tot_a')} | atq_perig {sb_name.get('ataques_perigosos_h')}x{sb_name.get('ataques_perigosos_a')}")
                 except: pass
@@ -2484,16 +2483,15 @@ def run():
             print(f"[STATS-{BOT_SOURCE.upper()}] {h} x {a} | chutes: {stats.get('chutes_tot_h',0)}/{stats.get('chutes_tot_a',0)} | cantos: {stats.get('escanteios_h',-1)}/{stats.get('escanteios_a',-1)} | atq_perig: {stats.get('ataques_perigosos_h',0)}/{stats.get('ataques_perigosos_a',0)}")
 
         # Verifica se tem dados reais — TODAS as fontes (incluindo Bzzoiro)
+        # Stats reais = chutes OU ataques perigosos (escanteio sozinho não vale)
         tem_stats = stats and (
             stats.get("chutes_tot_h", 0) > 0 or
             stats.get("chutes_tot_a", 0) > 0 or
-            stats.get("escanteios_h", -1) > 0 or
-            stats.get("escanteios_a", -1) > 0 or
             stats.get("ataques_perigosos_h", 0) > 0 or
             stats.get("ataques_perigosos_a", 0) > 0
         )
         if not tem_stats:
-            print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
+            print(f"[SKIP] {h} x {a} — sem stats reais (chutes ou ataques perigosos) em nenhuma API, pulando jogo")
             continue
 
         # Favorito: odds da própria fonte (cada bot só usa sua API)
