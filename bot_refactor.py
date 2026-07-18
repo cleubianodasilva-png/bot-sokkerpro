@@ -2034,9 +2034,8 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.70")
     sep = "━━━━━━━━━━━━━━━━━━━━"
 
-    # Layout SEM ESPAÇOS e com NEGRITO EM TUDO (exceto cabeçalho fixo)
+    # Layout EXATO dos 6 templates - tudo em negrito, sem "OPORTUNIDADE IDENTIFICADA"
     msg = (
-        "OPORTUNIDADE IDENTIFICADA\n"
         f"{sep}\n"
         f"<b>{title}</b>\n"
         f"{sep}\n"
@@ -2044,7 +2043,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         f"<b>🌍 Liga: {liga}</b>\n"
         f"<b>📡 {home} x {away}</b>\n"
         f"<b>👀 ODDs: Casa {odd_h or '—'} / Fora {odd_a or '—'}</b>\n"
-        f"<b>⏱ Minuto: {minuto}'</b>\n"
+        f"<b>⏰️ Minuto: {minuto}'</b>\n"
         f"{sep}\n"
         f"<b>📊 Estatísticas ao Vivo da Partida:</b>\n"
         f"<b>🚀 Chutes Totais: {chutes_h} | {chutes_a}</b>\n"
@@ -2054,13 +2053,13 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         f"{sep}\n"
         f"<b>💡 Análise Técnica da Partida:</b>\n"
         f"<b>🎯 Favorito: {fav_nome}</b>\n"
-        f"<b>🔥 Pressão APPM: ⚠️ {appm} ⚠️</b>\n"
+        f"<b>🔥 Pressão APPM: ⚠️{appm}⚠️</b>\n"
         f"<b>🚨 Alerta: {alerta}</b>\n"
         f"{sep}\n"
         f"<b>📌 Entrada: {entrada}</b>\n"
         f"<b>💰 ODD Recomendada: {odd_rec}+</b>\n"
         f"{sep}\n"
-        "<b>🔔Jogue com responsabilidade🔔</b>"
+        "<b>🔔Jogue com Responsabilidade🔔</b>"
     )
 
     keyboard = {
