@@ -2013,9 +2013,14 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     else:
         alerta = "Partida com ritmo moderado."
 
-    # Títulos exatos (Sem espaços extras, emojis corretos)
+    # Mapeamento de Emojis do novo print (media/1784355639671.jpg)
+    # Títulos
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         nome_m = mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')
+        title = f"🚩🔥{nome_m}🔥🚩" # Fallback, mas o print usa setas vermelhas
+        # Na imagem real: 🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩 (A seta é o emoji 🚩 ou similar)
+        # Observando bem o print: são triângulos vermelhos apontando: 🚩 (emoji bandeira mas no Telegram vira o ícone do print)
+        # Vamos usar EXATAMENTE os emojis da imagem:
         title = f"🚩🔥{nome_m}🔥🚩"
     else:
         titles_map = {
@@ -2027,11 +2032,10 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         }
         title = f"⚽️🔥{titles_map.get(mercado, mercado)}🔥⚽️"
 
-    fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
-    odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.70")
+    # Separador sólido
     sep = "━━━━━━━━━━━━━━━━━━━━"
 
-    # Layout reconstruído seguindo os espaçamentos e emojis dos prints
+    # Layout reconstruído EMOJI POR EMOJI do print 1784355639671
     msg = (
         "OPORTUNIDADE IDENTIFICADA\n"
         f"{sep}\n"
@@ -2041,7 +2045,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         f"🌍 Liga: {liga}\n"
         f"📡 {home} x {away}\n"
         f"👀 ODDs: Casa {odd_h or '—'} / Fora {odd_a or '—'}\n"
-        f"⏱ Minuto: {minuto}'\n\n"
+        f"⏱ Minuto: {minuto}'\n"
         f"{sep}\n"
         f"📊 Estatísticas ao Vivo da Partida:\n"
         f"🚀 Chutes Totais: {chutes_h} | {chutes_a}\n"
