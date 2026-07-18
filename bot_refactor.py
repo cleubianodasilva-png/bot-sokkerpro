@@ -1593,12 +1593,12 @@ def get_favorito_odds(home, away, fid=None, league=None):
         except Exception as e:
             print(f"[ODDS-ESPN] Erro: {e}")
 
-    # Fallback 2: Bzzoiro odds (quando fid for da Bzzoiro) — via /api/v2/odds/?event_id=
+    # Fallback 2: Bzzoiro odds (quando fid for da Bzzoiro) — via /events/{id}/odds/comparison/ (best_odds)
     if fid and str(fid).startswith("bzz_"):
         try:
             fid_raw = str(fid).replace("bzz_", "")
             headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-            r = requests.get(BZZOIRO_URL + f"/api/v2/odds/?event_id={fid_raw}&market=1x2", headers=headers, timeout=8)
+            r = requests.get(BZZOIRO_URL + f"/api/v2/events/{fid_raw}/odds/comparison/", headers=headers, timeout=8)
             if r.status_code == 200:
                 odds_data = r.json().get("results", [])
                 odd_h = None
@@ -1680,25 +1680,16 @@ def get_favorito_odds(home, away, fid=None, league=None):
 # FILTRO DE JANELAS
 # ═══════════════════════════════════════════════════════════════════════════════
 def get_odd_favorito_num(home, away, fid=None, league=None, fid_raw=None):
-    """Retorna a odd decimal do favorito (numero). Usa Bzzoiro via /api/v2/odds/?event_id=, depois ESPN, depois Odds API."""
+    """Retorna a odd decimal do favorito (numero). Usa Bzzoiro via /events/{id}/odds/comparison/, depois ESPN, depois Odds API."""
     if fid_raw:
         try:
             headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-            r = requests.get(f"{BZZOIRO_URL}/api/v2/odds/?event_id={fid_raw}&market=1x2", headers=headers, timeout=6)
+            r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/odds/comparison/", headers=headers, timeout=6)
             if r.status_code == 200:
-                odds_data = r.json().get("results", [])
-                best_home = 99.0
-                best_away = 99.0
-                for odd in odds_data:
-                    if odd.get("outcome") == "HOME":
-                        v = float(odd.get("decimal_odds", 0) or 99)
-                        if 1 < v < best_home:
-                            best_home = v
-                    elif odd.get("outcome") == "AWAY":
-                        v = float(odd.get("decimal_odds", 0) or 99)
-                        if 1 < v < best_away:
-                            best_away = v
-                if best_home < 90 and best_away < 90:
+                m1x2 = r.json().get("markets", {}).get("1x2", {})
+                best_home = float(m1x2.get("HOME", {}).get("best_odds", 99) or 99)
+                best_away = float(m1x2.get("AWAY", {}).get("best_odds", 99) or 99)
+                if 1 < best_home < 90 and 1 < best_away < 90:
                     return min(best_home, best_away)
         except Exception as e:
             print(f"[ODDS-BZZ-NUM] Erro: {e}")
@@ -2549,20 +2540,11 @@ def run():
         elif BOT_SOURCE == "bzzoiro":
             try:
                 headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-                r = requests.get(f"https://sports.bzzoiro.com/api/v2/odds/?event_id={fid_raw}&market=1x2", headers=headers, timeout=8)
-                odds_data = r.json().get("results", [])
-                odd_h = None
-                odd_a = None
-                for odd in odds_data:
-                    if odd.get("outcome") == "HOME":
-                        v = float(odd.get("decimal_odds", 0) or 0)
-                        if v > 1 and (odd_h is None or v < odd_h):
-                            odd_h = v
-                    elif odd.get("outcome") == "AWAY":
-                        v = float(odd.get("decimal_odds", 0) or 0)
-                        if v > 1 and (odd_a is None or v < odd_a):
-                            odd_a = v
-                if odd_h and odd_h > 1 and odd_a and odd_a > 1:
+                r = requests.get(f"https://sports.bzzoiro.com/api/v2/events/{fid_raw}/odds/comparison/", headers=headers, timeout=8)
+                m1x2 = r.json().get("markets", {}).get("1x2", {})
+                odd_h = float(m1x2.get("HOME", {}).get("best_odds", 0) or 0)
+                odd_a = float(m1x2.get("AWAY", {}).get("best_odds", 0) or 0)
+                if odd_h > 1 and odd_a > 1:
                     fav_final = "h" if odd_h <= odd_a else "a"
                     fav_por_odds = True
                     print(f"[ODDS-BZZ] {h} x {a} — odds reais: Casa:{odd_h} Fora:{odd_a} -> Fav:{fav_final}")
