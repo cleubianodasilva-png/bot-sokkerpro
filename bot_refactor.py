@@ -1978,69 +1978,102 @@ def gerar_motivo(mercado, stats, sh, sa, fav_final, minuto, cantos_atual=0):
 def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_val=None, cantos_atual=0, stats=None, sh=0, sa=0, fav_final="h", odd_h=None, odd_a=None, odd_b365=None, odd_bano=None):
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         linha = cantos_atual + 0.5
-        entrada = f"Mais de {linha}🚩"
-
-    # Adiciona ⚽ na entrada para mercados de gol
-    if mercado in ("HT", "LIMITEHT", "BTTS", "OFT", "OVERGOAL"):
-        entrada = str(entrada).rstrip() + "⚽️"
+        entrada = f"Mais de {linha}⛳️" # No gráfico parece ser uma bandeira, mas no sinal costuma ser ⛳️ ou 🚩. A imagem usa 🚩.
     
+    # Extração de stats
+    chutes_h = stats.get("chutes_tot_h", 0) if stats else 0
+    chutes_a = stats.get("chutes_tot_a", 0) if stats else 0
+    alvo_h   = stats.get("chutes_gol_h", 0) if stats else 0
+    alvo_a   = stats.get("chutes_gol_a", 0) if stats else 0
+    cant_h   = stats.get("escanteios_h", 0) if stats else 0
+    cant_a   = stats.get("escanteios_a", 0) if stats else 0
+    atq_per_h = stats.get("ataques_perigosos_h", 0) if stats else 0
+    atq_per_a = stats.get("ataques_perigosos_a", 0) if stats else 0
+    
+    # Cálculo APPM e Alerta
+    atq_max = max(atq_per_h, atq_per_a)
+    appm = round(atq_max / minuto, 2) if minuto > 0 else 0
+    quem = "do Mandante" if atq_per_h > atq_per_a else ("do Visitante" if atq_per_a > atq_per_h else "de ambas equipes")
+    
+    # Thresholds do Usuário + Fallbacks
+    if appm >= 2.0:
+        alerta = "Partida Com Pressão Constante."
+    elif appm >= 1.5:
+        alerta = "Partida Pegando Fogo."
+    elif appm >= 1.0:
+        alerta = "Partida Com Ritmo Intenso."
+    elif appm >= 0.8:
+        alerta = f"Partida com pressão {quem}."
+    elif appm >= 0.7:
+        alerta = "Partida Com Ritmo Moderado."
+    elif appm >= 0.6:
+        # Lógica da imagem: APPM 0.62 -> "Pressão crescente do Mandante no 2º tempo."
+        periodo = "1º tempo" if minuto <= 45 else "2º tempo"
+        alerta = f"Pressão crescente {quem} no {periodo}."
+    elif appm >= 0.5:
+        alerta = "Partida Com Ritmo Médio."
+    elif appm >= 0.3:
+        alerta = "Partida Com Ritmo Fraco."
+    else:
+        alerta = "Partida Com Ritmo Muito Fraco 👇"
+
+    # Títulos exatos
     titles = {
-        "HT": "🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩",
-        "LIMITEHT": "⚽️🔥OVER GOL LIMITE HT🔥⚽️",
-        "BTTS": "⚽️🔥AMBAS MARCAM🔥⚽️",
-        "OFT": "⚽️🔥OVER 1.5 GOLS PARTIDA🔥⚽️",
-        "OVERGOAL": "⚽️🔥OVER GOL PARTIDA🔥⚽️",
-        "CORNER_HT": "🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩",
-        "CORNER_FT": "🚩🔥ESCANTEIO ÁSIAT/LMT FT🔥🚩",
+        "HT": "OVER GOL INTERVALO",
+        "LIMITEHT": "OVER GOL LIMITE HT",
+        "BTTS": "AMBAS MARCAM",
+        "OFT": "OVER 1.5 GOLS PARTIDA",
+        "OVERGOAL": "OVER GOL PARTIDA",
+        "CORNER_HT": "ESCANTEIO ÁSIAT/LMT HT",
+        "CORNER_FT": "ESCANTEIO ÁSIAT/LMT FT",
     }
-    # Mapeamento exato de títulos baseado na imagem
-    if mercado == "HT": title = "🚩🔥OVER GOL INTERVALO🔥🚩"
-    elif mercado == "LIMITEHT": title = "🚩🔥OVER GOL LIMITE HT🔥🚩"
-    elif mercado == "OVERGOAL": title = "🚩🔥OVER GOL PARTIDA🔥🚩"
-    elif mercado == "OFT": title = "🚩🔥OVER 1.5 GOLS PARTIDA🔥🚩"
-    elif mercado == "BTTS": title = "🚩🔥AMBAS MARCAM🔥🚩"
-    elif mercado == "CORNER_HT": title = "🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩"
-    elif mercado == "CORNER_FT": title = "🚩🔥ESCANTEIO ÁSIAT/LMT FT🔥🚩"
-    else: title = titles.get(mercado, f"🚩🔥{mercado}🔥🚩")
+    t_core = titles.get(mercado, mercado)
+    if "CORNER" in mercado or "ESCANTEIO" in mercado:
+        title = f"🚩🔥{t_core}🔥🚩"
+    else:
+        title = f"⚽️🔥{t_core}🔥⚽️"
 
-    # Ajuste para usar setas conforme a imagem
-    title = title.replace("🚩🔥", "🚩🔥").replace("🔥🚩", "🔥🚩")
-    # Na imagem o título de escanteio usa: 🚩🔥...🔥🚩 e no topo tem: 🚩🔥ESCANTEIO ÁSIAT/LMT FT🔥🚩
-    # Vamos usar o formato exato da imagem: 🚩🔥 NOME 🔥🚩
-    # Mas o usuário enviou uma imagem onde o título é: 🚩🔥ESCANTEIO ÁSIAT/LMT FT🔥🚩
-    # E os ícones laterais são setas vermelhas 🚩 na verdade parecem ser o emoji 🚩 mas o modelo visual mostra setas.
-    # Olhando bem a imagem: 🚩🔥 ESCANTEIO ÁSIAT/LMT FT 🔥🚩 (usando o emoji de bandeira 🚩 que ele já usa)
-    
-    # REFINAMENTO DO LAYOUT BASEADO NA IMAGEM (media/1784355213117.jpg)
+    fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
+    odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.50")
     sep = "____________________________________"
-    
+
     msg = (
-        "OPORTUNIDADE IDENTIFICADA\n"
-        + sep + "\n\n"
-        + "🚩🔥" + title.replace("🚩🔥", "").replace("🔥🚩", "") + "🔥🚩\n"
-        + sep + "\n\n"
-        + "⚽ Placar: " + str(placar) + "\n"
-        + "🌍 Liga: " + str(liga) + "\n"
-        + "📡 " + str(home) + " x " + str(away) + "\n"
-        + "👀 ODDs: Casa " + (f"{odd_h:.2f}" if odd_h else "—") + " / Fora " + (f"{odd_a:.2f}" if odd_a else "—") + "\n"
-        + "⏱️ Minuto: " + str(minuto) + "'\n"
-        + sep + "\n\n"
-        + "📊 Estatísticas ao Vivo da Partida:\n"
-        + "🚀 Chutes Totais: " + str(chutes_h) + " | " + str(chutes_a) + "\n"
-        + "🎯 Chutes No Alvo: " + str(alvo_h) + " | " + str(alvo_a) + "\n"
-        + "⚔️ Ataques Perigosos: " + str(atq_perig_h) + " | " + str(atq_perig_a) + "\n"
-        + "🚩 Escanteios: " + str(cant_h) + " | " + str(cant_a) + "\n"
-        + sep + "\n\n"
-        + "💡 Análise Técnica da Partida:\n"
-        + "🎯 Favorito: " + str(fav_nome) + "\n"
-        + "🔥 Pressão APPM: ⚠️ " + str(appm_dominante) + " ⚠️\n"
-        + "🚨 Alerta: " + alerta + "\n"
-        + sep + "\n\n"
-        + "📌 Entrada: " + str(entrada) + "🚩\n"
-        + ("💰 ODD Recomendada: " + odd_rec + "+\n" if odd_rec else "")
-        + sep + "\n\n"
-        + "🔔Jogue com responsabilidade🔔"
+        "<b>OPORTUNIDADE IDENTIFICADA</b>\n"
+        f"{sep}\n\n"
+        f"<b>{title}</b>\n"
+        f"{sep}\n\n"
+        f"⚽️ Placar: {placar}\n"
+        f"🌍 Liga: {liga}\n"
+        f"⚔️ {home} x {away}\n"
+        f"👀 ODDs: Casa {odd_h or '—'} / Fora {odd_a or '—'}\n"
+        f"⏱️ Minuto: {minuto}'\n"
+        f"{sep}\n\n"
+        f"<b>📊 Estatísticas ao Vivo da Partida:</b>\n"
+        f"🚀 Chutes Totais: {chutes_h} | {chutes_a}\n"
+        f"🎯 Chutes No Alvo: {alvo_h} | {alvo_a}\n"
+        f"⚔️ Ataques Perigosos: {atq_per_h} | {atq_per_a}\n"
+        f"🚩 Escanteios: {cant_h} | {cant_a}\n"
+        f"{sep}\n\n"
+        f"<b>💡 Análise Técnica da Partida:</b>\n"
+        f"🎯 Favorito: {fav_nome}\n"
+        f"🔥 Pressão APPM: ⚠️ {appm} ⚠️\n"
+        f"🚨 Alerta: {alerta}\n"
+        f"{sep}\n\n"
+        f"📌 Entrada: {entrada}\n"
+        f"💰 ODD Recomendada: {odd_rec}+\n"
+        f"{sep}\n\n"
+        "🔔Jogue com responsabilidade🔔"
     )
+
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
+                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
+            ]
+        ]
+    }
+    return msg, keyboard
     keyboard = {
         "inline_keyboard": [
             [
