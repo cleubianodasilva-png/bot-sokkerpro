@@ -1997,21 +1997,159 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     atq_per_h = stats.get("ataques_perigosos_h", 0) if stats else 0
     atq_per_a = stats.get("ataques_perigosos_a", 0) if stats else 0
     
-    # Cálculo APPM e Alerta
+    # ════════════════════════════════════════════════════════════════
+    # SISTEMA DE ALERTAS UNIFICADO
+    # ════════════════════════════════════════════════════════════════
+    # Cleubiano thresholds (APPM puro) — definem a intensidade da pressão
+    # Zapia thresholds (APPM + mercado + stats) — refinam o contexto
+    # ════════════════════════════════════════════════════════════════
+    
     atq_max = max(atq_per_h, atq_per_a)
-    appm = round(atq_max / minuto, 2) if minuto > 0 else 0
-    quem = "do Mandante" if atq_per_h > atq_per_a else ("do Visitante" if atq_per_a > atq_per_h else "de ambas equipes")
+    appm_val = round(atq_max / minuto, 2) if minuto > 0 else 0
+    
+    # — Quem está pressionando —
+    if atq_per_h > atq_per_a:
+        quem = "do Mandante"
+        dominante = home
+    elif atq_per_a > atq_per_h:
+        quem = "do Visitante"
+        dominante = away
+    else:
+        quem = "de ambas equipes"
+        dominante = "Ambos"
+    
     periodo = "1º tempo" if minuto <= 45 else "2º tempo"
     
-    # Lógica de Alerta idêntica aos prints
-    if appm >= 1.0: 
-        alerta = f"Pressão muito alta! Forte domínio {quem}."
-    elif appm >= 0.6:
-        alerta = f"Pressão crescente {quem} no {periodo}."
-    elif appm >= 0.5:
-        alerta = f"Partida com bastante pressão {quem}."
+    # — Variáveis auxiliares —
+    total_chutes = chutes_h + chutes_a
+    total_alvo = alvo_h + alvo_a
+    total_atq = atq_per_h + atq_per_a
+    total_cant = cant_h + cant_a
+    jogo_aberto = placar == "0x0"
+    fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
+    
+    # ════════════════════════════════════════════════════════════════
+    # THRESHOLDS DO CLEUBIANO — APPM PURO (INTENSIDADE BASE)
+    # ════════════════════════════════════════════════════════════════
+    if appm_val >= 1.0:
+        nivel_pressao = "muito alta"
+        intensidade = "Pressão muito alta!"
+    elif appm_val >= 0.6:
+        nivel_pressao = "alta"
+        intensidade = "Pressão crescente"
+    elif appm_val >= 0.5:
+        nivel_pressao = "moderada"
+        intensidade = "Partida com bastante pressão"
     else:
-        alerta = "Partida com ritmo moderado."
+        nivel_pressao = "baixa"
+        intensidade = "Partida com ritmo moderado"
+    
+    # ════════════════════════════════════════════════════════════════
+    # THRESHOLDS DA ZAPIA — REFINAMENTO POR MERCADO (CONTEXTO)
+    # ════════════════════════════════════════════════════════════════
+    if "CORNER" in mercado or "ESCANTEIO" in mercado:
+        if "HT" in mercado:
+            if appm_val >= 1.0:
+                alerta = f"Pressão muito alta! Forte domínio {quem} no 1º tempo."
+            elif appm_val >= 0.6:
+                alerta = f"Pressão ofensiva elevada no 1º tempo — {total_atq} ataques perigosos."
+            elif appm_val >= 0.5:
+                alerta = f"Partida com bastante pressão {quem} no 1º tempo."
+            else:
+                alerta = f"Pressão ofensiva em crescimento no 1º tempo — {total_cant} escanteios."
+        else:
+            if appm_val >= 1.0:
+                alerta = f"Pressão muito alta! Domínio absoluto {quem} no 2º tempo."
+            elif appm_val >= 0.6:
+                alerta = f"Pressão ofensiva sustentada na partida — {total_atq} ataques perigosos."
+            elif appm_val >= 0.5:
+                alerta = f"Partida com bastante pressão {quem}."
+            else:
+                alerta = f"Pressão ofensiva contínua — {total_cant} escanteios na partida."
+    
+    elif mercado == "HT":
+        if jogo_aberto and appm_val >= 0.6:
+            if alvo_h >= 1 and alvo_a >= 1:
+                alerta = f"Pressão muito alta! Ambas equipes finalizando no alvo no 1º tempo."
+            elif alvo_h >= 1:
+                alerta = f"Pressão muito alta! {dominante} finalizando no alvo no 1º tempo."
+            else:
+                alerta = f"Pressão crescente! Alta intensidade de chutes no 1º tempo."
+        elif appm_val >= 0.5:
+            if total_chutes >= 8:
+                alerta = f"Partida com bastante pressão! {total_chutes} chutes no 1º tempo."
+            elif atq_per_h >= 15 or atq_per_a >= 15:
+                alerta = f"Partida com bastante pressão! {dominante} dominando no 1º tempo."
+            else:
+                alerta = f"Partida com bastante pressão {quem} no 1º tempo."
+        else:
+            if total_alvo >= 3:
+                alerta = f"Jogo movimentado — {total_chutes} chutes, {total_alvo} no alvo no 1º tempo."
+            else:
+                alerta = f"Jogo movimentado com chances — {total_chutes} chutes no 1º tempo."
+    
+    elif mercado == "BTTS":
+        if appm_val >= 0.6:
+            if alvo_h >= 2 and alvo_a >= 1:
+                alerta = f"Pressão crescente! Ambas equipes com finalizações no alvo."
+            elif alvo_h >= 2 or alvo_a >= 2:
+                alerta = f"Pressão crescente! Um dos lados finalizando muito no alvo."
+            else:
+                alerta = f"Pressão crescente! Ambas equipes atacando com frequência."
+        elif appm_val >= 0.5:
+            if total_alvo >= 4:
+                alerta = f"Jogo aberto! {total_alvo} finalizações no alvo — ambas marcam bem projetado."
+            elif atq_per_h >= 12 and atq_per_a >= 10:
+                alerta = f"Partida com bastante pressão dos dois lados!"
+            else:
+                alerta = f"Partida com bastante pressão! Ambas equipes com volume de ataque."
+        else:
+            if total_chutes >= 15:
+                alerta = f"Jogo aberto com muitas finalizações — {total_chutes} chutes."
+            else:
+                alerta = f"Ambas equipes com volume de ataque — expectativa de gols dos dois lados."
+    
+    elif mercado == "OFT":
+        if appm_val >= 0.6 and total_chutes >= 10:
+            if placar in ("1x0", "0x1"):
+                alerta = f"Pressão crescente no 2º tempo — placar em {placar} com {total_chutes} chutes | Mais um gol esperado."
+            else:
+                alerta = f"Pressão crescente! Jogo com {total_chutes} finalizações — forte tendência de mais gols."
+        elif appm_val >= 0.5:
+            if total_atq >= 20:
+                alerta = f"Partida com bastante pressão! {total_atq} ataques perigosos — Over 1.5 com boa projeção."
+            else:
+                alerta = f"Partida com bastante pressão — {total_chutes} chutes em {minuto}' | Over 1.5."
+        else:
+            if total_alvo >= 4:
+                alerta = f"Bons números ofensivos — {total_alvo} no alvo em {minuto}' | Over 1.5 com potencial."
+            else:
+                alerta = f"Partida com {total_chutes} chutes — placar deve se mover para Over 1.5."
+    
+    elif mercado == "OVERGOAL":
+        if jogo_aberto and appm_val >= 0.6:
+            alerta = f"Pressão crescente! Jogo 0x0 mas aberto — {total_chutes} chutes, {total_atq} ataques perigosos."
+        elif appm_val >= 0.5:
+            if total_atq >= 15:
+                alerta = f"Partida com bastante pressão! Time dominando e placar ainda 0x0 — Gol esperado."
+            else:
+                alerta = f"Partida com bastante pressão! Expectativa de gol com base no volume ofensivo."
+        else:
+            alerta = f"Expectativa de gol — {total_chutes} chutes, {total_atq} ataques perigosos no 2º tempo."
+    
+    else:
+        # Fallback: APPM puro
+        if appm_val >= 1.0:
+            alerta = f"Pressão muito alta! Forte domínio {quem}."
+        elif appm_val >= 0.6:
+            alerta = f"Pressão crescente {quem} no {periodo}."
+        elif appm_val >= 0.5:
+            alerta = f"Partida com bastante pressão {quem}."
+        else:
+            alerta = "Partida com ritmo moderado."
+
+    # APPM para exibição no layout
+    appm = appm_val
 
     # Emojis EXATOS do print 1784355796901
     seta = "🚩" # No print é a seta vermelha que o Telegram renderiza como o emoji 🚩 ou similar
@@ -2030,7 +2168,6 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         }
         title = f"⚽️🔥{titles_map.get(mercado, mercado)}🔥⚽️"
 
-    fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
     odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.70")
     sep = "━━━━━━━━━━━━━━━━━━━━"
 
@@ -2061,36 +2198,6 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         f"{sep}\n"
         "<b>🔔Jogue com Responsabilidade🔔</b>"
     )
-
-    keyboard = {
-        "inline_keyboard": [
-            [
-                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
-                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
-            ]
-        ]
-    }
-    return msg, keyboard
-
-    keyboard = {
-        "inline_keyboard": [
-            [
-                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
-                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
-            ]
-        ]
-    }
-    return msg, keyboard
-
-    keyboard = {
-        "inline_keyboard": [
-            [
-                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
-                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
-            ]
-        ]
-    }
-    return msg, keyboard
 
     keyboard = {
         "inline_keyboard": [
