@@ -2464,14 +2464,12 @@ def run():
                 try:
                     sb_name = get_stats_bzzoiro_by_name(h, a)
                     if isinstance(sb_name, dict):
-                        if "Club Friendlies" in liga:
-                            stats = sb_name
-                            print(f"[BZZ-NAME] Friendlies aceito: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')}")
-                        elif (sb_name.get("chutes_tot_h", 0) > 0 or sb_name.get("chutes_tot_a", 0) > 0 or
+                        if (sb_name.get("chutes_tot_h", 0) > 0 or sb_name.get("chutes_tot_a", 0) > 0 or
                               sb_name.get("ataques_perigosos_h", 0) > 0 or sb_name.get("ataques_perigosos_a", 0) > 0 or
-                              sb_name.get("chutes_gol_h", 0) > 0 or sb_name.get("chutes_gol_a", 0) > 0):
+                              sb_name.get("chutes_gol_h", 0) > 0 or sb_name.get("chutes_gol_a", 0) > 0 or
+                              sb_name.get("escanteios_h", 0) > 0 or sb_name.get("escanteios_a", 0) > 0):
                             stats = sb_name
-                            print(f"[BZZ-NAME] Stats via nome OK: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')} | chutes {sb_name.get('chutes_tot_h')}x{sb_name.get('chutes_tot_a')}")
+                            print(f"[BZZ-NAME] Stats via nome OK: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')} | chutes {sb_name.get('chutes_tot_h')}x{sb_name.get('chutes_tot_a')} | atq_perig {sb_name.get('ataques_perigosos_h')}x{sb_name.get('ataques_perigosos_a')}")
                 except: pass
 
         # Preenche defaults para campos que faltam
