@@ -1428,41 +1428,26 @@ def get_stats_espn_by_name(home, away):
     except: pass
     return {}
 
-def norm(s):
-        return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().lower().strip()
+def get_stats_sokkerpro_by_name(home, away):
+    """Fallback: busca stats no SokkerPro pelo nome dos times."""
     try:
-        headers = {}  # SokkerPro
-#         r = requests.get(BZZOIRO_URL + "/api/v2/events/live/", headers=headers, timeout=15)
-        data = r.json()
-        events = data.get("events", [])
-        h_busca = norm(home)
-        a_busca = norm(away)
-        for ev in events:
-            h_nome = norm(ev.get("home_team", ""))
-            a_nome = norm(ev.get("away_team", ""))
-            if (h_busca in h_nome or h_nome in h_busca) and (a_busca in a_nome or a_nome in a_busca):
-                eid = ev.get("id")
-#                 rs = requests.get(BZZOIRO_URL + f"/api/v2/events/{eid}/stats/", headers=headers, timeout=10)
-                sd = rs.json()
-                raw_stats = sd.get("stats", {})
-                stats = {}
-                for side_label, side_key in [("home", "h"), ("away", "a")]:
-                    side_data = raw_stats.get(side_label, {})
-                    stats[f"chutes_tot_{side_key}"] = int(side_data.get("total_shots", 0) or 0)
-                    stats[f"chutes_gol_{side_key}"] = int(side_data.get("shots_on_target", 0) or 0)
-                    stats[f"escanteios_{side_key}"] = int(side_data.get("corner_kicks", 0) or 0)
-                    stats[f"ataques_perigosos_{side_key}"] = int(side_data.get("dangerous_attack", 0) or 0)
-                    stats[f"posse_{side_key}"] = int(side_data.get("ball_possession", 0) or 0)
-                    cards = side_data.get("cards", {})
-                    if isinstance(cards, dict):
-                        stats[f"red_cards_{side_key}"] = int(cards.get("red", 0) or 0)
-                if stats.get("chutes_tot_h", 0) > 0 or stats.get("escanteios_h", -1) >= 0:
-                    print(f"[SKP-NAME] Stats por nome OK: {ev.get('home_team')}x{ev.get('away_team')} | esc {stats.get('escanteios_h')}x{stats.get('escanteios_a')}")
-                    return stats
-        return {}
-    except Exception as e:
-        print(f"[SKP-NAME] Erro: {e}")
-        return {}
+        data = _get_data()
+        if not data: return {}
+        for cat in data['data']['sortedCategorizedFixtures']:
+            for fix in cat['fixtures']:
+                if fix.get('localTeamName', '').lower() == home.lower() and fix.get('visitorTeamName', '').lower() == away.lower():
+                    return {
+                        "chutes_tot_h": _get_int(fix.get('localShotsTotal', 0)),
+                        "chutes_tot_a": _get_int(fix.get('visitorShotsTotal', 0)),
+                        "chutes_gol_h": _get_int(fix.get('localShotsOnGoal', 0)),
+                        "chutes_gol_a": _get_int(fix.get('visitorShotsOnGoal', 0)),
+                        "escanteios_h": _get_int(fix.get('localCorners', 0)),
+                        "escanteios_a": _get_int(fix.get('visitorCorners', 0)),
+                        "ataques_perigosos_h": _get_int(fix.get('localAttacksDangerousAttacks', 0)),
+                        "ataques_perigosos_a": _get_int(fix.get('visitorAttacksDangerousAttacks', 0)),
+                    }
+    except: pass
+    return {}
 
 def get_stats_apifootball_by_name(home, away):
     """Fallback: busca jogo na apifootball pelo nome dos times e retorna stats."""
