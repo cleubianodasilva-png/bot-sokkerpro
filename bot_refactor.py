@@ -482,29 +482,33 @@ BZZOIRO_URL = "https://sports.bzzoiro.com"
 # ═══════════════+++
 # TELEGRAM
 # ═══════════════════════════════════════════════════════════════════════════════
-def send_telegram(msg, botoes=True, reply_to=None, marca=None, home="", away="", odd_b365_val=None, odd_bano_val=None):
+def send_telegram(msg_data, reply_to=None, marca=None, home="", away="", odd_b365_val=None, odd_bano_val=None):
+    """Envia mensagem formatada com botões inline."""
+    if isinstance(msg_data, tuple):
+        text, keyboard = msg_data
+    else:
+        text = msg_data
+        keyboard = None
+
     url_send = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     last_mid = None
     for chat_id in CHAT_IDS:
-        payload = {"chat_id": chat_id, "text": msg, "parse_mode": "HTML"}
+        payload = {
+            "chat_id": chat_id, 
+            "text": text, 
+            "parse_mode": "HTML",
+            "disable_web_page_preview": False
+        }
         if reply_to:
             payload["reply_to_message_id"] = reply_to
-        if botoes:
-            import urllib.parse
-            query = urllib.parse.quote(f"{home} vs {away}") if home and away else ""
-            bet365_url   = "https://www.bet365.bet.br/#/AX/"
-            paripesa_url = "https://paripesa.com/en/live/football/"
-            # Constrói texto dos botões exatamente como na imagem
-            txt_b365 = "🟣BET365🟣"
-            txt_paripesa = "🔵PARIPESA🔵"
-            payload["reply_markup"] = json.dumps({"inline_keyboard": [[
-                {"text": txt_b365, "url": bet365_url},
-                {"text": txt_paripesa, "url": paripesa_url}
-            ]]})
+        if keyboard:
+            payload["reply_markup"] = json.dumps(keyboard)
+            
         try:
             r = requests.post(url_send, json=payload, timeout=10)
-            mid = r.json().get("result", {}).get("message_id")
-            if mid: last_mid = mid
+            res = r.json()
+            if res.get("ok"):
+                last_mid = res.get("result", {}).get("message_id")
         except:
             pass
     return last_mid
@@ -707,7 +711,7 @@ def enviar_relatorio_diario():
     hoje = datetime.now(BRT).strftime("%d/%m/%Y")
     greens, reds = get_relatorio_hoje()
     msg = gerar_layout_relatorio(greens, reds, hoje)
-    if send_telegram(msg, botoes=False):
+    if send_telegram(msg):
         sent_ctrl.add(hoje_key)
         save_sent(sent_ctrl)
         print(f"[Relatório] Enviado ({hoje_key})")
@@ -843,7 +847,7 @@ def gerar_layout_performance():
 def enviar_relatorio_performance():
     """Envia relatório de performance para o Telegram."""
     msg = gerar_layout_performance()
-    if send_telegram(msg, botoes=False):
+    if send_telegram(msg):
         print("[PERFORMANCE] Relatório enviado")
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2804,7 +2808,7 @@ def run():
             res = checar_resultado(s)
             if res:
                 emoji = "🟢GREEN CONFIRMADO🟢" if res == "green" else "🔴RED CONFIRMADO🔴"
-                send_telegram(emoji, botoes=False, reply_to=s.get("message_id"))
+                send_telegram(emoji, reply_to=s.get("message_id"))
                 salvar_resultado(res)
                 registrar_performance(s.get("mercado"), res)
             else:
