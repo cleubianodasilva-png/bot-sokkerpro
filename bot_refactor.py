@@ -1961,36 +1961,27 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
 
     sep = "━━━━━━━━━━━━━━━━━━━━"
     
-    # --- ANALISE DINAMICA (baseada no APPM - Ataques Perigosos Por Minuto) ---
-    total_chutes = chutes_h + chutes_a
-    total_alvo = alvo_h + alvo_a
-    total_cantos = cant_h + cant_a
-    total_atq_perig = atq_perig_h + atq_perig_a
+    # --- ANALISE DINAMICA (APPM - Ataques Perigosos Por Minuto do TIME DOMINANTE) ---
+    # Pressão e alerta baseados exclusivamente no time com MAIS ataques perigosos
+    atq_dominante = max(atq_perig_h, atq_perig_a)
     if minuto > 0:
-        chutes_por_min = round(total_chutes / minuto, 2)
-        cantos_por_min = round(total_cantos / minuto, 2)
-        atq_perig_por_min = round(total_atq_perig / minuto, 2)
+        appm_dominante = round(atq_dominante / minuto, 2)
     else:
-        chutes_por_min = 0
-        cantos_por_min = 0
-        atq_perig_por_min = 0
+        appm_dominante = 0
 
-    # Pressão baseada exclusivamente no APPM da partida (total)
-    if atq_perig_por_min >= 1.8:
-        pressao = "Altíssima 🔥🔥"
-    elif atq_perig_por_min >= 1.0:
-        pressao = "Alta 🔥"
-    elif atq_perig_por_min >= 0.7:
-        pressao = "Moderada 💪"
-    elif atq_perig_por_min >= 0.5:
-        pressao = "Média ✅"
-    elif atq_perig_por_min >= 0.3:
-        pressao = "Baixa 👎"
+    # Alerta baseado APENAS no APPM do time dominante
+    if appm_dominante >= 1.8:
+        alerta = "Partida com pressão ofensiva altíssima 🔥🔥"
+    elif appm_dominante >= 1.0:
+        alerta = "Partida com pressão ofensiva alta 🔥"
+    elif appm_dominante >= 0.7:
+        alerta = "Partida com pressão ofensiva moderada 💪"
+    elif appm_dominante >= 0.5:
+        alerta = "Partida com ritmo ofensivo médio ✅"
+    elif appm_dominante >= 0.3:
+        alerta = "Partida com ritmo ofensivo baixo 👎"
     else:
-        pressao = "Muito Baixa 👇"
-
-    # Substitui alerta antigo pela análise técnica completa com ataques perigosos
-    alerta = gerar_motivo(mercado, stats, sh, sa, fav_final, minuto, cantos_atual)
+        alerta = "Partida com ritmo ofensivo muito baixo 👇"
 
     if fav_final == "h":
         fav_nome = home
@@ -2019,13 +2010,13 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         + sep + "\n"
         + "<b>💡 Análise Técnica da Partida:</b>\n"
         + "<b>🎯 Favorito:</b> <b>" + str(fav_nome) + "</b>\n"
-        + "<b>🔥 Pressão:</b> <b>" + pressao + "</b>\n"
-        + "<b>⚠️ Alerta:</b> <b>" + alerta + "</b>\n"
+        + "<b>🔥 Pressão APPM:</b> <b>⚠️" + str(appm_dominante) + "⚠️</b>\n"
+        + "<b>🚨 Alerta:</b> <b>" + alerta + "</b>\n"
         + sep + "\n"
         + "📌 Entrada: <b>" + str(entrada) + "</b>\n"
         + "<b>💰 ODD Recomendada:</b> <b>1.70+</b>\n"
         + sep + "\n"
-        + "⚠️ <b>Jogue com responsabilidade</b> ⚠️"
+        + "<b>🔔Jogue com responsabilidade🔔</b>"
     )
 
 def checar_resultado(sinal):
