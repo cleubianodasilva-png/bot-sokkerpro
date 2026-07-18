@@ -714,8 +714,6 @@ def enviar_relatorio_diario():
     greens, reds = get_relatorio_hoje()
     msg = gerar_layout_relatorio(greens, reds, hoje)
     if send_telegram(msg):
-        sent_ctrl.add(hoje_key)
-        save_sent(sent_ctrl)
         print(f"[Relatório] Enviado ({hoje_key})")
 
 # ─── Performance por Mercado ────────────────────────────────────────────────────
@@ -2551,10 +2549,11 @@ def run():
                 fav_final = "h"
                 print(f"[FAV-HOME] {h} x {a} — sem odds e sem stats, assumindo mandante como favorito")
 
-        # Se NENHUMA fonte retornou odds válidas, pula o jogo
-        if not (odd_h and odd_h > 1 and odd_a and odd_a > 1):
-            print(f"[SKIP-SEM-ODDS] {h} x {a} — nenhuma odd válida (Casa:{odd_h} Fora:{odd_a}), pulando sinal")
-            continue
+        # Bzzoiro: mesmo sem odds, segue com favorito por chutes ou mandante
+        if BOT_SOURCE != "bzzoiro":
+            if not (odd_h and odd_h > 1 and odd_a and odd_a > 1):
+                print(f"[SKIP-SEM-ODDS] {h} x {a} — nenhuma odd válida (Casa:{odd_h} Fora:{odd_a}), pulando sinal")
+                continue
 
         red_fav = stats.get(f"red_cards_{fav_final}", 0) if stats else 0
 
@@ -2606,14 +2605,19 @@ def run():
 
         # HISTÓRICO — Média de gols por partida (jogo todo) ≥ 2.0
         # Req. para: Over Gol HT, Over Gol FT e BTTS
-        home_id = j.get("home_id", "")
-        away_id = j.get("away_id", "")
-        media_hist = 0.0
-        if home_id and away_id:
-            media_hist = get_media_gols_historica(home_id, away_id)
-        hist_ok = media_hist < 0 or media_hist >= 2.0  # -1 = sem dados históricos (não bloqueia)
-        if not hist_ok:
-            print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.0, pulando mercados de gol")
+        # Bzzoiro: sem filtro (modo livre)
+        if BOT_SOURCE == "bzzoiro":
+            hist_ok = True
+            media_hist = 0.0
+        else:
+            home_id = j.get("home_id", "")
+            away_id = j.get("away_id", "")
+            media_hist = 0.0
+            if home_id and away_id:
+                media_hist = get_media_gols_historica(home_id, away_id)
+            hist_ok = media_hist < 0 or media_hist >= 2.0  # -1 = sem dados históricos (não bloqueia)
+            if not hist_ok:
+                print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.0, pulando mercados de gol")
 
         # MERCADO 1: OVER 0.5 HT (15-27 min, 0x0, favorito empatando, sem vermelho do fav, média hist ≥ 2.0)
         if p == 1 and 15 <= m <= 27:
