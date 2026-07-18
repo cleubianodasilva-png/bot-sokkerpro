@@ -2485,22 +2485,18 @@ def run():
         if stats:
             print(f"[STATS-{BOT_SOURCE.upper()}] {h} x {a} | chutes: {stats.get('chutes_tot_h',0)}/{stats.get('chutes_tot_a',0)} | cantos: {stats.get('escanteios_h',-1)}/{stats.get('escanteios_a',-1)} | atq_perig: {stats.get('ataques_perigosos_h',0)}/{stats.get('ataques_perigosos_a',0)}")
 
-        # Verifica se tem dados reais — APENAS para apifootball/ESPN
-# Bzzoiro é LIVRE, sem filtro de stats
-        if BOT_SOURCE != "bzzoiro":
-            tem_stats = stats and (
-                stats.get("chutes_tot_h", 0) > 0 or
-                stats.get("chutes_tot_a", 0) > 0 or
-                stats.get("escanteios_h", -1) > 0 or
-                stats.get("escanteios_a", -1) > 0 or
-                stats.get("ataques_perigosos_h", 0) > 0 or
-                stats.get("ataques_perigosos_a", 0) > 0
-            )
-            if not tem_stats:
-                print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
-                continue
-        else:
-            print(f"[BZZ-LIVRE] {h} x {a} — modo livre, sem filtro de stats")
+        # Verifica se tem dados reais — TODAS as fontes (incluindo Bzzoiro)
+        tem_stats = stats and (
+            stats.get("chutes_tot_h", 0) > 0 or
+            stats.get("chutes_tot_a", 0) > 0 or
+            stats.get("escanteios_h", -1) > 0 or
+            stats.get("escanteios_a", -1) > 0 or
+            stats.get("ataques_perigosos_h", 0) > 0 or
+            stats.get("ataques_perigosos_a", 0) > 0
+        )
+        if not tem_stats:
+            print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
+            continue
 
         # Favorito: odds da própria fonte (cada bot só usa sua API)
         odd_h = j.get("odd_h")
