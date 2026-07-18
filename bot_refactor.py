@@ -2013,14 +2013,12 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     else:
         alerta = "Partida com ritmo moderado."
 
-    # Mapeamento de Emojis do novo print (media/1784355639671.jpg)
-    # Títulos
+    # Emojis EXATOS do print 1784355796901
+    seta = "🚩" # No print é a seta vermelha que o Telegram renderiza como o emoji 🚩 ou similar
+    seta_v = "🚩" 
+
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         nome_m = mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')
-        title = f"🚩🔥{nome_m}🔥🚩" # Fallback, mas o print usa setas vermelhas
-        # Na imagem real: 🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩 (A seta é o emoji 🚩 ou similar)
-        # Observando bem o print: são triângulos vermelhos apontando: 🚩 (emoji bandeira mas no Telegram vira o ícone do print)
-        # Vamos usar EXATAMENTE os emojis da imagem:
         title = f"🚩🔥{nome_m}🔥🚩"
     else:
         titles_map = {
@@ -2032,37 +2030,48 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         }
         title = f"⚽️🔥{titles_map.get(mercado, mercado)}🔥⚽️"
 
-    # Separador sólido
+    fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
+    odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.70")
     sep = "━━━━━━━━━━━━━━━━━━━━"
 
-    # Layout reconstruído EMOJI POR EMOJI do print 1784355639671
+    # Layout SEM ESPAÇOS e com NEGRITO EM TUDO (exceto cabeçalho fixo)
     msg = (
         "OPORTUNIDADE IDENTIFICADA\n"
         f"{sep}\n"
         f"<b>{title}</b>\n"
-        f"{sep}\n\n"
-        f"⚽️ Placar: {placar}\n"
-        f"🌍 Liga: {liga}\n"
-        f"📡 {home} x {away}\n"
-        f"👀 ODDs: Casa {odd_h or '—'} / Fora {odd_a or '—'}\n"
-        f"⏱ Minuto: {minuto}'\n"
         f"{sep}\n"
-        f"📊 Estatísticas ao Vivo da Partida:\n"
-        f"🚀 Chutes Totais: {chutes_h} | {chutes_a}\n"
-        f"🎯 Chutes No Alvo: {alvo_h} | {alvo_a}\n"
-        f"⚔️ Ataques Perigosos: {atq_per_h} | {atq_per_a}\n"
-        f"🚩 Escanteios: {cant_h} | {cant_a}\n"
+        f"<b>⚽️ Placar: {placar}</b>\n"
+        f"<b>🌍 Liga: {liga}</b>\n"
+        f"<b>📡 {home} x {away}</b>\n"
+        f"<b>👀 ODDs: Casa {odd_h or '—'} / Fora {odd_a or '—'}</b>\n"
+        f"<b>⏱ Minuto: {minuto}'</b>\n"
         f"{sep}\n"
-        f"💡 Análise Técnica da Partida:\n"
-        f"🎯 Favorito: {fav_nome}\n"
-        f"🔥 Pressão APPM: ⚠️ {appm} ⚠️\n"
-        f"🚨 Alerta: {alerta}\n"
-        f"{sep}\n\n"
-        f"📌 Entrada: {entrada}\n"
-        f"💰 ODD Recomendada: {odd_rec}+\n\n"
+        f"<b>📊 Estatísticas ao Vivo da Partida:</b>\n"
+        f"<b>🚀 Chutes Totais: {chutes_h} | {chutes_a}</b>\n"
+        f"<b>🎯 Chutes No Alvo: {alvo_h} | {alvo_a}</b>\n"
+        f"<b>⚔️ Ataques Perigosos: {atq_per_h} | {atq_per_a}</b>\n"
+        f"<b>🚩 Escanteios: {cant_h} | {cant_a}</b>\n"
         f"{sep}\n"
-        "🔔Jogue com responsabilidade🔔"
+        f"<b>💡 Análise Técnica da Partida:</b>\n"
+        f"<b>🎯 Favorito: {fav_nome}</b>\n"
+        f"<b>🔥 Pressão APPM: ⚠️ {appm} ⚠️</b>\n"
+        f"<b>🚨 Alerta: {alerta}</b>\n"
+        f"{sep}\n"
+        f"<b>📌 Entrada: {entrada}</b>\n"
+        f"<b>💰 ODD Recomendada: {odd_rec}+</b>\n"
+        f"{sep}\n"
+        "<b>🔔Jogue com responsabilidade🔔</b>"
     )
+
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
+                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
+            ]
+        ]
+    }
+    return msg, keyboard
 
     keyboard = {
         "inline_keyboard": [
