@@ -2073,15 +2073,15 @@ def check_status_command(total_jogos_live=0, jogos_live=None, jogos_na_janela=No
             if agora_ts - msg_ts > 600: # Ignora comandos com mais de 10 minutos
                 continue
             pass  # responde em qualquer chat
-            if text == "/relatoriomensal" and not relatorio_respondido:
+            if ("/relatoriomensal" in text or text.startswith("/relatoriomensal@")) and not relatorio_respondido:
                 msg = enviar_relatorio_mensal()
                 requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
                               json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
                 relatorio_respondido = True
-            if text == "/relatoriodiario" and not relatorio_respondido:
+            if ("/relatoriodiario" in text or text.startswith("/relatoriodiario@")) and not relatorio_respondido:
                 enviar_relatorio_diario()
                 relatorio_respondido = True
-            elif text == "/radar" and not radar_respondido:
+            elif ("/radar" in text or text.startswith("/radar@")) and not radar_respondido:
                 jogos_live = jogos_live or []
                 jogos_na_janela = jogos_na_janela or []
                 # Monta lista de jogos na janela
@@ -2731,7 +2731,7 @@ def processar_comandos_pendentes(token, chat_id, jogos_live=None, jogos_na_janel
                 text = (msg.get("text", "") or "").strip()
                 chat_orig = msg.get("chat", {}).get("id", 0)
                 sep = "━" * 20
-                if "/radar" in text:
+                if "/radar" in text or text.startswith("/radar@"):
                     linhas_jan = ""
                     for j in jogos_na_janela:
                         h = j.get("home",""); a = j.get("away","")
@@ -2762,17 +2762,17 @@ def processar_comandos_pendentes(token, chat_id, jogos_live=None, jogos_na_janel
                     requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
                                   json={"chat_id": chat_orig, "text": msg_radar, "parse_mode": "HTML"})
                     print(f"[CMD] Radar respondido com {len(jogos_live)} jogos live, {len(jogos_na_janela)} na janela")
-                elif "/relatoriomensal" in text:
+                elif "/relatoriomensal" in text or text.startswith("/relatoriomensal@"):
                     try:
                         msg = enviar_relatorio_mensal()
                         requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
                                       json={"chat_id": chat_orig, "text": msg, "parse_mode": "HTML"})
                     except Exception as e:
                         print(f"[REL-MENSAL] Erro: {e}")
-                elif "/relatoriodiario" in text:
+                elif "/relatoriodiario" in text or text.startswith("/relatoriodiario@"):
                     try: enviar_relatorio_diario()
                     except: pass
-                elif "/mercados" in text:
+                elif "/mercados" in text or text.startswith("/mercados@"):
                     try:
                         msg = enviar_relatorio_performance()
                         if not msg:
