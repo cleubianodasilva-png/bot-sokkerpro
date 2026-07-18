@@ -108,13 +108,13 @@ import requests
 
 def obter_nome_liga(game, fonte):
     # apifootball: game['league']['name']
-    # Bzzoiro: game['league_name']
+    # SokkerPro: game['league_name']
     # ESPN: game['league']
     liga = "Liga Não Identificada"
     
     if fonte == "apifootball":
         liga = game.get('league', {}).get('name', "Liga Não Identificada")
-    elif fonte == "bzzoiro":
+    elif fonte == "sokkerpro":
         liga = game.get('league_name', "Liga Não Identificada")
     elif fonte == "espn":
         liga = game.get('league', "Liga Não Identificada")
@@ -126,9 +126,10 @@ def obter_nome_liga(game, fonte):
     return liga
 # ═══════════════════════════════════════════════════════════════════════════════
 # BOT MÁQUINA DE GREENS / ZAPIA - VERSÃO ELITE 100% AUTOMÁTICA
-# FONTES: ESPN PÚBLICA + BZZOIRO (TOKEN ATIVO) + APIFOOTBALL (V3 ATIVA)
+# FONTES: ESPN PÚBLICA + SKPOIRO (TOKEN ATIVO) + APIFOOTBALL (V3 ATIVA)
 # ═══════════════════════════════════════════════════════════════════════════════
 import os, json, requests, time
+import sokkerpro_source as skp
 APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "")
 from datetime import datetime, timezone, timedelta
 import hashlib, re, unicodedata
@@ -449,35 +450,26 @@ RAPIDAPI_HEADERS = {
 
 
 # URLs Oficiais das APIs (Conforme Documentação)
-BZZOIRO_URL = "https://sports.bzzoiro.com"
 APIFOOTBALL_URL  = "https://apiv3.apifootball.com"
 
 # APIs Secundárias (Ativas)
 APIFOOTBALL_COM_KEY = os.getenv("APIFOOTBALL_KEY")
-BZZOIRO_TOKEN = os.getenv("BZZOIRO_TOKEN")
-BZZOIRO_URL = "https://sports.bzzoiro.com"
 
 
 
 # URLs Oficiais das APIs (Conforme Documentação)
-BZZOIRO_URL = "https://sports.bzzoiro.com"
 APIFOOTBALL_URL  = "https://apiv3.apifootball.com"
 
 # APIs Secundárias (Ativas)
 APIFOOTBALL_COM_KEY = os.getenv("APIFOOTBALL_KEY")
-BZZOIRO_TOKEN = os.getenv("BZZOIRO_TOKEN")
-BZZOIRO_URL = "https://sports.bzzoiro.com"
 
 
 
 # URLs Oficiais das APIs (Conforme Documentação)
-BZZOIRO_URL = "https://sports.bzzoiro.com"
 APIFOOTBALL_URL  = "https://apiv3.apifootball.com"
 
 # APIs Secundárias (Ativas)
 APIFOOTBALL_COM_KEY = os.getenv("APIFOOTBALL_KEY")
-BZZOIRO_TOKEN = os.getenv("BZZOIRO_TOKEN")
-BZZOIRO_URL = "https://sports.bzzoiro.com"
 
 # ═══════════════+++
 # TELEGRAM
@@ -1104,27 +1096,6 @@ def get_stats_apifootball_v3(match_id):
         return stats
     except: return {}
 
-def get_stats_bzzoiro(fid_raw, home, away):
-    try:
-        headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-        r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/stats/", headers=headers, timeout=10)
-        data = r.json()
-        raw_stats = data.get("stats", {})
-        stats = {}
-        for side, key in [("home", "h"), ("away", "a")]:
-            side_data = raw_stats.get(side, {})
-            stats[f"chutes_tot_{key}"] = int(side_data.get("total_shots", 0) or 0)
-            stats[f"chutes_gol_{key}"] = int(side_data.get("shots_on_target", 0) or 0)
-            stats[f"escanteios_{key}"] = int(side_data.get("corner_kicks", 0) or 0)
-            cards = side_data.get("cards", {})
-            if isinstance(cards, dict):
-                stats[f"red_cards_{key}"] = int(cards.get("red", 0) or 0)
-        return stats
-    except: return {}
-
-
-
-
 def get_jogos_apifootball_v3(fids_existentes):
     try:
         hoje = datetime.now().strftime("%Y-%m-%d")
@@ -1222,40 +1193,9 @@ def get_jogos_apifootball_v3(fids_existentes):
         return []
 
 
-def get_jogos_bzzoiro(fids_existentes):
-    try:
-        headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-        r = requests.get(BZZOIRO_URL + "/api/v2/events/live/", headers=headers, timeout=15)
-        data = r.json()
-        results = data.get("events", [])
-        jogos = []
-        for ev in results:
-            fid = "bzz_" + str(ev.get("id", ""))
-            if fid in fids_existentes: continue
-            sh, sa = int(ev.get("home_score") or 0), int(ev.get("away_score") or 0)
-            minuto = ev.get("current_minute") or 0
-            if not isinstance(minuto, int):
-                try: minuto = int(str(minuto).split("'")[0])
-                except: minuto = 0
-            # Bzzoiro retorna league_name diretamente (league field pode ser None)
-            liga_nome = ev.get("league_name", "") or ""
-            if not liga_nome:
-                liga = ev.get("league", {}) or {}
-                liga_nome = liga.get("name", "Desconhecida") if isinstance(liga, dict) else str(liga)
-            p_raw = str(ev.get("period", "") or "")
-            period = 1 if "1" in p_raw or minuto <= 45 else 2
-            jogos.append({
-                "fid": fid, "fid_raw": str(ev.get("id", "")),
-                "home": ev.get("home_team", ""), "away": ev.get("away_team", ""),
-                "sh": sh, "sa": sa, "minuto": minuto,
-                "period": period, "liga": liga_nome, "source": "bzzoiro"
-            })
-        print(f"[Bzzoiro] {len(jogos)} novos jogos")
-        return jogos
-    except Exception as e:
-        print(f"[Bzzoiro ERRO] {e}")
-        return []
-
+def get_jogos_sokkerpro(fids_existentes):
+    """Delega para o módulo SokkerPro."""
+    return skp.get_jogos_sokkerpro(fids_existentes)
 def get_stats_apifootball_v3(match_id):
     try:
         params = {"action": "get_statistics", "match_id": match_id, "APIkey": APIFOOTBALL_COM_KEY}
@@ -1297,59 +1237,9 @@ def get_stats_apifootball_v3(match_id):
         return stats
     except: return {}
 
-def get_stats_bzzoiro(fid_raw, home, away):
-    try:
-        headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-        r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/stats/", headers=headers, timeout=10)
-        data = r.json()
-        raw_stats = data.get("stats", {})
-        
-        # Bzzoiro costuma aninhar as estatísticas reais dentro de subchaves se o provider for detalhado
-        # Mas vamos primeiro tentar o mapeamento direto que estava no código
-        
-        stats = {}
-        any_nonzero = False
-        
-        # Mapeamento Bzzoiro para nosso padrão (h/a)
-        # Bzzoiro keys: total_shots, shots_on_target, corner_kicks, dangerous_attack, ball_possession
-        
-        for side, key in [("home", "h"), ("away", "a")]:
-            side_data = raw_stats.get(side, {})
-            
-            # Se side_data for apenas {"xg":...}, tenta buscar em níveis mais profundos ou fallback
-            # Alguns eventos no Bzzoiro retornam stats vazias se não houver cobertura premium
-            
-            val_tot = int(side_data.get("total_shots", 0) or 0)
-            stats[f"chutes_tot_{key}"] = val_tot
-            if val_tot > 0: any_nonzero = True
-            
-            val_gol = int(side_data.get("shots_on_target", 0) or 0)
-            stats[f"chutes_gol_{key}"] = val_gol
-            if val_gol > 0: any_nonzero = True
-            
-            val_corn = int(side_data.get("corner_kicks", 0) or 0)
-            stats[f"escanteios_{key}"] = val_corn
-            if val_corn > 0: any_nonzero = True
-            
-            val_atq = int(side_data.get("dangerous_attack", 0) or 0)
-            stats[f"ataques_perigosos_{key}"] = val_atq
-            if val_atq > 0: any_nonzero = True
-            
-            val_pos = int(side_data.get("ball_possession", 0) or 0)
-            stats[f"posse_{key}"] = val_pos
-            if val_pos > 0: any_nonzero = True
-            
-            stats[f"red_cards_{key}"] = int(side_data.get("red_cards", 0) or 0)
-            stats[f"yellow_cards_{key}"] = int(side_data.get("yellow_cards", 0) or 0)
-
-        # Fallback: Se stats vierem vazias da Bzzoiro, tenta a ESPN pelo nome dos times
-        if not any_nonzero:
-            espn_stats = get_stats_espn_by_name(home, away)
-            if espn_stats: return espn_stats
-            
-        return stats
-    except: return {}
-
+def get_stats_sokkerpro(fid_raw, home, away):
+    """Delega para o módulo SokkerPro."""
+    return skp.get_stats_sokkerpro(fid_raw, home, away)
 def get_stats_espn_by_name(home, away):
     """Tenta buscar estatísticas na ESPN usando o nome dos times (quando a API principal falha)."""
     try:
@@ -1370,45 +1260,9 @@ def get_stats_espn_by_name(home, away):
     except: pass
     return {}
 
-def get_stats_bzzoiro_by_name(home, away):
-    """Fallback: busca stats no Bzzoiro pelo nome dos times."""
-    import unicodedata
-    def norm(s):
-        return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().lower().strip()
-    try:
-        headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-        r = requests.get(BZZOIRO_URL + "/api/v2/events/live/", headers=headers, timeout=15)
-        data = r.json()
-        events = data.get("events", [])
-        h_busca = norm(home)
-        a_busca = norm(away)
-        for ev in events:
-            h_nome = norm(ev.get("home_team", ""))
-            a_nome = norm(ev.get("away_team", ""))
-            if (h_busca in h_nome or h_nome in h_busca) and (a_busca in a_nome or a_nome in a_busca):
-                eid = ev.get("id")
-                rs = requests.get(BZZOIRO_URL + f"/api/v2/events/{eid}/stats/", headers=headers, timeout=10)
-                sd = rs.json()
-                raw_stats = sd.get("stats", {})
-                stats = {}
-                for side_label, side_key in [("home", "h"), ("away", "a")]:
-                    side_data = raw_stats.get(side_label, {})
-                    stats[f"chutes_tot_{side_key}"] = int(side_data.get("total_shots", 0) or 0)
-                    stats[f"chutes_gol_{side_key}"] = int(side_data.get("shots_on_target", 0) or 0)
-                    stats[f"escanteios_{side_key}"] = int(side_data.get("corner_kicks", 0) or 0)
-                    stats[f"ataques_perigosos_{side_key}"] = int(side_data.get("dangerous_attack", 0) or 0)
-                    stats[f"posse_{side_key}"] = int(side_data.get("ball_possession", 0) or 0)
-                    cards = side_data.get("cards", {})
-                    if isinstance(cards, dict):
-                        stats[f"red_cards_{side_key}"] = int(cards.get("red", 0) or 0)
-                if stats.get("chutes_tot_h", 0) > 0 or stats.get("escanteios_h", -1) >= 0:
-                    print(f"[BZZ-NAME] Stats por nome OK: {ev.get('home_team')}x{ev.get('away_team')} | esc {stats.get('escanteios_h')}x{stats.get('escanteios_a')}")
-                    return stats
-        return {}
-    except Exception as e:
-        print(f"[BZZ-NAME] Erro: {e}")
-        return {}
-
+def get_stats_sokkerpro_by_name(home, away):
+    """Fallback: busca stats na SokkerPro pelo nome dos times."""
+    return skp.get_stats_sokkerpro_by_name(home, away)
 def get_stats_apifootball_by_name(home, away):
     """Fallback: busca jogo na apifootball pelo nome dos times e retorna stats."""
     import unicodedata
@@ -1595,22 +1449,18 @@ def get_favorito_odds(home, away, fid=None, league=None):
         except Exception as e:
             print(f"[ODDS-ESPN] Erro: {e}")
 
-    # Fallback 2: Bzzoiro odds (quando fid for da Bzzoiro)
-    if fid and str(fid).startswith("bzz_"):
+    # Fallback 2: SokkerPro odds (quando fid for da SokkerPro)
+    if fid and str(fid).startswith("skp_"):
         try:
-            fid_raw = str(fid).replace("bzz_", "")
-            headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-            r = requests.get(BZZOIRO_URL + f"/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=8)
-            if r.status_code == 200:
-                bz = r.json().get("odds", {})
-                odd_h = float(bz.get("home_win", 0) or 0)
-                odd_a = float(bz.get("away_win", 0) or 0)
-                if odd_h > 1 and odd_a > 1:
-                    fav = "h" if odd_h <= odd_a else "a"
-                    print(f"[ODDS-BZZ] {home} x {away} | Casa:{odd_h} Fora:{odd_a} -> Fav:{fav}")
-                    return (fav, odd_h, odd_a)
+            fid_raw = str(fid).replace("skp_", "")
+            # Tenta pegar odds via médias históricas (SokkerPro não tem endpoint de odds direto)
+            if hasattr(skp, 'get_favorito_medias'):
+                fav = skp.get_favorito_medias(fid_raw)
+                if fav in ("h", "a"):
+                    print(f"[ODDS-SKP] {home} x {away} — favorito via médias históricas: {fav}")
+                    return (fav, 2.0, 2.0)
         except Exception as e:
-            print(f"[ODDS-BZZ] Erro: {e}")
+            print(f"[ODDS-SKP] Erro: {e}")
 
     # Fallback 3: APIfootball.com odds (quando fid for do apifootball)
     if fid and str(fid).replace("apif_","").isdigit():
@@ -1670,11 +1520,9 @@ def get_favorito_odds(home, away, fid=None, league=None):
 # FILTRO DE JANELAS
 # ═══════════════════════════════════════════════════════════════════════════════
 def get_odd_favorito_num(home, away, fid=None, league=None, fid_raw=None):
-    """Retorna a odd decimal do favorito (numero). Usa Bzzoiro se tiver fid_raw, depois ESPN, depois Odds API."""
+    """Retorna a odd decimal do favorito (numero). Usa SokkerPro se tiver fid_raw, depois ESPN, depois Odds API."""
     if fid_raw:
         try:
-            headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-            r = requests.get(f"{BZZOIRO_URL}/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=6)
             if r.status_code == 200:
                 odds = r.json().get("odds", {})
                 oh = float(odds.get("home_win") or 99)
@@ -2346,8 +2194,8 @@ def get_media_gols_historica(home_id, away_id):
 def run():
     # ─── ISOLAMENTO POR REPOSITÓRIO: cada bot usa SÓ sua fonte ───
     _repo_atual = os.environ.get("GITHUB_REPOSITORY", "").lower()
-    if "bzzoiro" in _repo_atual:
-        BOT_SOURCE = "bzzoiro"
+    if "sokkerpro" in _repo_atual:
+        BOT_SOURCE = "sokkerpro"
     elif "maquina-de-greens" in _repo_atual:
         BOT_SOURCE = "espn"
     else:
@@ -2368,9 +2216,9 @@ def run():
     elif BOT_SOURCE == "espn":
         jogos_live = get_jogos_espn(set())
         print(f"[ESPN] {len(jogos_live)} jogos ao vivo")
-    elif BOT_SOURCE == "bzzoiro":
-        jogos_live = get_jogos_bzzoiro(set())
-        print(f"[Bzzoiro] {len(jogos_live)} jogos ao vivo")
+    elif BOT_SOURCE == "sokkerpro":
+        jogos_live = get_jogos_sokkerpro(set())
+        print(f"[SokkerPro] {len(jogos_live)} jogos ao vivo")
 
     # PASSO 2: Filtra janelas alvo
     jogos_na_janela = filtrar_janelas(jogos_live)
@@ -2442,25 +2290,25 @@ def run():
                     se_name = get_stats_espn_by_name(h, a)
                     if isinstance(se_name, dict) and se_name: stats = se_name
                 except: pass
-        elif BOT_SOURCE == "bzzoiro":
+        elif BOT_SOURCE == "sokkerpro":
             try:
-                sb = get_stats_bzzoiro(fid_raw, h, a)
+                sb = get_stats_sokkerpro(fid_raw, h, a)
                 if isinstance(sb, dict) and sb: stats = sb
             except: pass
             if not stats or not (stats.get("chutes_tot_h", 0) > 0 or stats.get("chutes_tot_a", 0) > 0 or
                                   stats.get("escanteios_h", -1) >= 0 or stats.get("escanteios_a", -1) >= 0 or
                                   stats.get("ataques_perigosos_h", 0) > 0 or stats.get("ataques_perigosos_a", 0) > 0):
                 try:
-                    sb_name = get_stats_bzzoiro_by_name(h, a)
+                    sb_name = get_stats_sokkerpro_by_name(h, a)
                     if isinstance(sb_name, dict):
                         if "Club Friendlies" in liga:
                             stats = sb_name
-                            print(f"[BZZ-NAME] Friendlies aceito: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')}")
+                            print(f"[SKP-NAME] Friendlies aceito: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')}")
                         elif (sb_name.get("chutes_tot_h", 0) > 0 or sb_name.get("chutes_tot_a", 0) > 0 or
                               sb_name.get("ataques_perigosos_h", 0) > 0 or sb_name.get("ataques_perigosos_a", 0) > 0 or
                               sb_name.get("chutes_gol_h", 0) > 0 or sb_name.get("chutes_gol_a", 0) > 0):
                             stats = sb_name
-                            print(f"[BZZ-NAME] Stats via nome OK: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')} | chutes {sb_name.get('chutes_tot_h')}x{sb_name.get('chutes_tot_a')}")
+                            print(f"[SKP-NAME] Stats via nome OK: esc {sb_name.get('escanteios_h')}x{sb_name.get('escanteios_a')} | chutes {sb_name.get('chutes_tot_h')}x{sb_name.get('chutes_tot_a')}")
                 except: pass
 
         # Preenche defaults para campos que faltam
@@ -2475,8 +2323,8 @@ def run():
             print(f"[STATS-{BOT_SOURCE.upper()}] {h} x {a} | chutes: {stats.get('chutes_tot_h',0)}/{stats.get('chutes_tot_a',0)} | cantos: {stats.get('escanteios_h',-1)}/{stats.get('escanteios_a',-1)} | atq_perig: {stats.get('ataques_perigosos_h',0)}/{stats.get('ataques_perigosos_a',0)}")
 
         # Verifica se tem dados reais — APENAS para apifootball/ESPN
-# Bzzoiro é LIVRE, sem filtro de stats
-        if BOT_SOURCE != "bzzoiro":
+# SokkerPro é LIVRE, sem filtro de stats
+        if BOT_SOURCE != "sokkerpro":
             tem_stats = stats and (
                 stats.get("chutes_tot_h", 0) > 0 or
                 stats.get("chutes_tot_a", 0) > 0 or
@@ -2489,7 +2337,7 @@ def run():
                 print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
                 continue
         else:
-            print(f"[BZZ-LIVRE] {h} x {a} — modo livre, sem filtro de stats")
+            print(f"[SKP-LIVRE] {h} x {a} — modo livre, sem filtro de stats")
 
         # Favorito: odds da própria fonte (cada bot só usa sua API)
         odd_h = j.get("odd_h")
@@ -2526,17 +2374,14 @@ def run():
                 fav_por_odds = fav_final in ("h", "a")
             except: pass
 
-        elif BOT_SOURCE == "bzzoiro":
+        elif BOT_SOURCE == "sokkerpro":
             try:
-                headers = {"Authorization": "Token " + BZZOIRO_TOKEN}
-                r = requests.get(f"https://sports.bzzoiro.com/api/v2/events/{fid_raw}/odds/", headers=headers, timeout=8)
-                bz = r.json().get("odds", {})
-                odd_h = float(bz.get("home_win", 0) or 0)
-                odd_a = float(bz.get("away_win", 0) or 0)
-                if odd_h > 1 and odd_a > 1:
-                    fav_final = "h" if odd_h <= odd_a else "a"
+                # Tenta odds via médias históricas da SokkerPro
+                skp_fav = skp.get_favorito_medias(fid_raw)
+                if skp_fav in ("h", "a"):
+                    fav_final = skp_fav
                     fav_por_odds = True
-                    print(f"[ODDS-BZZ] {h} x {a} — odd Casa:{odd_h:.2f} Fora:{odd_a:.2f}")
+                    print(f"[ODDS-SKP] {h} x {a} — favorito via médias históricas: {fav_final}")
             except: pass
 
         # Sem odds = usa stats (chutes) como fallback para definir favorito
