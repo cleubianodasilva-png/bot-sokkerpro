@@ -2033,10 +2033,8 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     
     return msg, keyboard
 
-def send_telegram(msg_data, marca="Zapia", home="H", away="A", odd_b365_val=None, odd_bano_val=None):
-    text, keyboard = msg_data
-    # ... logic to send text and reply_markup=keyboard ...
-
+def checar_resultado(sinal):
+    """Verifica se um sinal já enviado deu green ou red usando ESPN Summary."""
     try:
         eid     = str(sinal.get("fixture_id"))
         mercado = sinal.get("mercado")
@@ -2228,8 +2226,8 @@ def get_media_gols_historica(home_id, away_id):
         r = requests.get(APIFOOTBALL_URL, params=params, timeout=10)
         data = r.json()
         if not isinstance(data, dict):
-            _HIST_CACHE[chave] = 0.0
-            return 0.0
+            _HIST_CACHE[chave] = -1.0
+            return -1.0
 
         # Junta todos os resultados dos dois times
         todos_jogos = []
@@ -2244,8 +2242,8 @@ def get_media_gols_historica(home_id, away_id):
                     except: pass
 
         if len(todos_jogos) < 4:
-            _HIST_CACHE[chave] = 0.0
-            return 0.0
+            _HIST_CACHE[chave] = -1.0
+            return -1.0
 
         media = round(sum(todos_jogos) / len(todos_jogos), 1)
         _HIST_CACHE[chave] = media
