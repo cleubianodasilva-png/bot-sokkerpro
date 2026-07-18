@@ -2184,7 +2184,7 @@ def get_media_gols_historica(home_id, away_id):
         _HIST_CACHE[chave] = media
         return media
     except:
-        _HIST_CACHE[chave] = 0.0
+        _HIST_CACHE[chave] = -1.0
         return 0.0
 
 # ═══════════════════════════════════════════════════════════════════════════════
