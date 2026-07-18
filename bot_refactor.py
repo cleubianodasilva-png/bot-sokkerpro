@@ -2260,7 +2260,7 @@ def run():
     # PASSO 1: Bzzoiro — única fonte
     # ─────────────────────────────────────────────────────────────
     jogos_live = get_jogos_bzzoiro(set())
-    print(f"[Total] {len(jogos_live)} jogos ao vivo (Bzzoiro)
+    print(f"[Total] {len(jogos_live)} jogos ao vivo (Bzzoiro)")
 
     # PASSO 2: Filtra janelas alvo
     jogos_na_janela = filtrar_janelas(jogos_live)
