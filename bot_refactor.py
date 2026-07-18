@@ -1989,8 +1989,8 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     else:
         pressao = "Muito Baixa 👇"
 
-    # Substitui alerta antigo pela análise técnica completa com ataques perigosos
-    alerta = gerar_motivo(mercado, stats, sh, sa, fav_final, minuto, cantos_atual)
+    # Alerta baseado no APPM da partida — ritmo ofensivo em tempo real
+    alerta = alerta_appm
 
     if fav_final == "h":
         fav_nome = home
