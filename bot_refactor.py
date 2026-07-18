@@ -2029,102 +2029,24 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
     fav_nome = home if fav_final == "h" else (away if fav_final == "a" else "—")
     
     # ════════════════════════════════════════════════════════════════
-    # THRESHOLDS CLEUBIANO — INTENSIDADE BASE (APPM puro)
+    # THRESHOLDS CLEUBIANO — APPM PURO (ÚNICO SISTEMA DE ALERTA)
     # ════════════════════════════════════════════════════════════════
     if appm_val >= 2.0:
-        intensidade = "Partida Com Pressão Constante"
+        alerta = "Partida Com Pressão Constante"
     elif appm_val >= 1.5:
-        intensidade = "Partida Pegando Fogo"
+        alerta = "Partida Pegando Fogo"
     elif appm_val >= 1.0:
-        intensidade = "Partida Com Ritmo Intenso"
+        alerta = "Partida Com Ritmo Intenso"
     elif appm_val >= 0.8:
-        intensidade = f"Partida com pressão {quem}"
+        alerta = f"Partida com pressão {quem}"
     elif appm_val >= 0.7:
-        intensidade = "Partida Com Ritmo Moderado"
+        alerta = "Partida Com Ritmo Moderado"
     elif appm_val >= 0.5:
-        intensidade = "Partida Com Ritmo Médio"
+        alerta = "Partida Com Ritmo Médio"
     elif appm_val >= 0.3:
-        intensidade = "Partida Com Ritmo Fraco"
+        alerta = "Partida Com Ritmo Fraco"
     else:
-        intensidade = "Partida Com Ritmo Muito Baixo"
-    
-    # ════════════════════════════════════════════════════════════════
-    # REFINAMENTO ZAPIA — CONTEXTO POR MERCADO
-    # ════════════════════════════════════════════════════════════════
-    if "CORNER" in mercado or "ESCANTEIO" in mercado:
-        if "HT" in mercado:
-            if total_cant >= 7:
-                alerta = f"{intensidade} | {total_cant} escanteios no 1º tempo — volume alto para HT."
-            elif total_cant >= 5:
-                alerta = f"{intensidade} | {total_cant} escanteios no 1º tempo — boa movimentação de cantos."
-            elif appm_val >= 0.8:
-                alerta = f"{intensidade} | Pressão ofensiva elevada — {total_cant} escanteios com potencial de aumento."
-            else:
-                alerta = f"{intensidade} | {total_cant} escanteios no 1º tempo — expectativa para mais cantos."
-        else:
-            if total_cant >= 12:
-                alerta = f"{intensidade} | {total_cant} escanteios na partida — volume muito alto para FT."
-            elif total_cant >= 9:
-                alerta = f"{intensidade} | {total_cant} escanteios na partida — bom volume para mais cantos no FT."
-            elif appm_val >= 0.8:
-                alerta = f"{intensidade} | Pressão ofensiva no 2º tempo — {total_cant} escanteios, tendência de aumento."
-            else:
-                alerta = f"{intensidade} | {total_cant} escanteios na partida — {cant_h}x{cant_a} com potencial para ultrapassar a linha."
-    
-    elif mercado == "HT":
-        if jogo_aberto and appm_val >= 0.8:
-            if alvo_h >= 1 and alvo_a >= 1:
-                alerta = f"{intensidade} | Ambas equipes finalizando no alvo no 1º tempo."
-            elif alvo_h >= 1 or alvo_a >= 1:
-                alerta = f"{intensidade} | {dominante} finalizando no alvo no 1º tempo."
-            else:
-                alerta = f"{intensidade} | Alta intensidade de chutes no 1º tempo."
-        elif appm_val >= 0.5 and total_chutes >= 8:
-            alerta = f"{intensidade} | {total_chutes} chutes no 1º tempo — pressão para gol."
-        elif appm_val >= 0.5:
-            alerta = f"{intensidade} | {dominante} dominando as ações ofensivas no 1º tempo."
-        elif total_alvo >= 3:
-            alerta = f"{intensidade} | {total_chutes} chutes, {total_alvo} no alvo no 1º tempo."
-        else:
-            alerta = f"{intensidade} | {total_chutes} chutes no 1º tempo — jogo movimentado."
-    
-    elif mercado == "BTTS":
-        if appm_val >= 0.8:
-            if alvo_h >= 2 and alvo_a >= 1:
-                alerta = f"{intensidade} | Ambas equipes com finalizações no alvo."
-            else:
-                alerta = f"{intensidade} | Ambas equipes atacando com frequência."
-        elif appm_val >= 0.5:
-            if total_alvo >= 4:
-                alerta = f"{intensidade} | {total_alvo} finalizações no alvo — ambas marcam bem projetado."
-            else:
-                alerta = f"{intensidade} | Ambas equipes com volume de ataque."
-        else:
-            alerta = f"{intensidade} | Ambas equipes com volume de ataque — expectativa de gols dos dois lados."
-    
-    elif mercado == "OFT":
-        if appm_val >= 0.8 and total_chutes >= 10:
-            alerta = f"{intensidade} | {total_chutes} chutes no 2º tempo — forte tendência de mais gols."
-        elif appm_val >= 0.5 and total_atq >= 20:
-            alerta = f"{intensidade} | {total_atq} ataques perigosos — Over 1.5 com boa projeção."
-        elif appm_val >= 0.5:
-            alerta = f"{intensidade} | {total_chutes} chutes em {minuto}' — Over 1.5."
-        else:
-            alerta = f"{intensidade} | {total_chutes} chutes, {total_alvo} no alvo — placar deve se mover para Over 1.5."
-    
-    elif mercado == "OVERGOAL":
-        if jogo_aberto and appm_val >= 0.8:
-            alerta = f"{intensidade} | Jogo 0x0 mas aberto — {total_chutes} chutes, {total_atq} ataques perigosos."
-        elif appm_val >= 0.5 and total_atq >= 15:
-            alerta = f"{intensidade} | Time dominando e placar ainda 0x0 — Gol esperado."
-        elif appm_val >= 0.5:
-            alerta = f"{intensidade} | Expectativa de gol com base no volume ofensivo."
-        else:
-            alerta = f"{intensidade} | {total_chutes} chutes, {total_atq} ataques perigosos — expectativa de gol."
-    
-    else:
-        # Fallback: só a intensidade
-        alerta = intensidade
+        alerta = "Partida Com Ritmo Muito Baixo"
 
     # APPM para exibição no layout
     appm = appm_val
@@ -2146,7 +2068,7 @@ def msg_universal(home, away, minuto, liga, n, mercado, entrada, placar, extra_v
         }
         title = f"⚽️🔥{titles_map.get(mercado, mercado)}🔥⚽️"
 
-    odd_rec = f"{odd_b365:.2f}" if odd_b365 else (f"{odd_bano:.2f}" if odd_bano else "1.70")
+    odd_rec = "1.70"
     sep = "━━━━━━━━━━━━━━━━━━━━"
 
     # Layout EXATO dos 6 templates - tudo em negrito, sem "OPORTUNIDADE IDENTIFICADA"
