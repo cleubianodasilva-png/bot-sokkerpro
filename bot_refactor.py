@@ -1351,28 +1351,22 @@ def get_stats_bzzoiro(fid_raw, home, away):
 def get_stats_espn_by_name(home, away):
     """Tenta buscar estatísticas na ESPN usando o nome dos times (quando a API principal falha)."""
     try:
-        # 1. Busca o ID do jogo no scoreboard global da ESPN
         url = "https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard"
         r = requests.get(url, timeout=5)
         if r.status_code != 200: return {}
-        
         data = r.json()
         target_eid = None
         h_norm = home.lower()
         a_norm = away.lower()
-        
         for ev in data.get("events", []):
             name = ev.get("name", "").lower()
             if h_norm in name and a_norm in name:
                 target_eid = ev.get("id")
                 break
-        
         if target_eid:
             return get_stats_espn(target_eid)
     except: pass
     return {}
-        return stats
-    except: return {}
 
 def get_stats_bzzoiro_by_name(home, away):
     """Fallback: busca stats no Bzzoiro pelo nome dos times."""
