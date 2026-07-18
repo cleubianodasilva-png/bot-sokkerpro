@@ -1534,9 +1534,9 @@ def get_favorito_odds(home, away, fid=None, league=None):
                         continue
                     ml = odd.get("moneyline", {})
                     if ml:
-                        # Tenta current (ao vivo), depois close (pré-jogo), depois open
+                        # Prioridade: close (pre-game) > open > current (live)
                         def _get_ml(side):
-                            for key in ("current", "close", "open"):
+                            for key in ("close", "open", "current"):
                                 v = ml.get(side, {}).get(key, {}).get("odds")
                                 if v:
                                     return v
@@ -1640,7 +1640,7 @@ def get_odd_favorito_num(home, away, fid=None, league=None):
                     ml = odd.get("moneyline", {})
                     if ml:
                         def _get_ml(side):
-                            for key in ("current", "close", "open"):
+                            for key in ("close", "open", "current"):
                                 v = ml.get(side, {}).get(key, {}).get("odds")
                                 if v:
                                     return v
