@@ -2528,11 +2528,13 @@ def run():
         tem_stats = stats and (
             stats.get("chutes_tot_h", 0) > 0 or
             stats.get("chutes_tot_a", 0) > 0 or
-            stats.get("escanteios_h", -1) >= 0 or
-            stats.get("escanteios_a", -1) >= 0
+            stats.get("escanteios_h", -1) > 0 or
+            stats.get("escanteios_a", -1) > 0 or
+            stats.get("ataques_perigosos_h", 0) > 0 or
+            stats.get("ataques_perigosos_a", 0) > 0
         )
         if not tem_stats:
-            print(f"[SKIP] {h} x {a} — sem stats em nenhuma API, pulando jogo")
+            print(f"[SKIP] {h} x {a} — sem stats reais (chutes, cantos ou ataques perigosos) em nenhuma API, pulando jogo")
             continue
 
         # Favorito: primeiro usa odds inline da apifootball (ja veio na coleta), depois ESPN, depois tenta de novo
