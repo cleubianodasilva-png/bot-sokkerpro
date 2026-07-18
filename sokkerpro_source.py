@@ -218,7 +218,7 @@ def get_stats_sokkerpro_by_name(home, away):
             for fix in cat['fixtures']:
                 h_nome = _norm(fix.get('localTeamName', ''))
                 a_nome = _norm(fix.get('visitorTeamName', ''))
-                if (h_busca in h_nome or h_nome in h_busca) and (a_busca in a_nome or a_nome in a_busca):
+                if (h_norm in h_nome or h_nome in h_norm) and (a_norm in a_nome or a_nome in a_norm):
                     stats = _extrair_stats(fix, home, away)
                     if stats:
                         print(f"[SKP-NAME] Stats por nome OK: {fix.get('localTeamName')}x{fix.get('visitorTeamName')}")
