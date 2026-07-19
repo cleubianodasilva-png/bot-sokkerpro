@@ -2432,21 +2432,9 @@ def run():
         _appm_total = round(_apt_val / m, 2) if m > 0 else 0
         _appm_h = round(_aph_val / m, 2) if m > 0 else 0
         _appm_a = round(_apa_val / m, 2) if m > 0 else 0
-        # APPM seletiva por repositório
-        # maquina-de-greens-bot (Grupo GITHUB): APPM ativo
-        #   - OVER GOLS: casa ≥ 0.8 OU fora ≥ 0.8 OU total ≥ 1.5
-        #   - ESCANTEIOS: casa ≥ 0.7 OU fora ≥ 0.7 OU total ≥ 1.4
-        # boot-ia-inteligente-bot (Grupo ZAPIA): livre
-        if BOT_SOURCE == "espn" or "maquina-de-greens" in _repo_atual:
-            appm_valido   = _appm_h >= 0.7 or _appm_a >= 0.7 or _appm_total >= 1.4  # escanteios
-            appm_gols_ok  = _appm_h >= 0.8 or _appm_a >= 0.8 or _appm_total >= 1.5  # over gols
-            if not appm_valido:
-                print(f"[APPM-BLOQUEADO] {h} x {a} — APPM casa={_appm_h} fora={_appm_a} total={_appm_total} (mín: 0.7/time ou 1.4 total)")
-            if not appm_gols_ok:
-                print(f"[APPM-GOLS-BLOQUEADO] {h} x {a} — APPM casa={_appm_h} fora={_appm_a} total={_appm_total} (mín: 0.8/time ou 1.5 total)")
-        else:
-            appm_valido   = True
-            appm_gols_ok  = True
+        # APPM: livre (sem filtro) — Cleubiano autorizou
+        appm_valido   = True
+        appm_gols_ok  = True
 
         # HISTÓRICO — Média de gols por partida (jogo todo) ≥ 2.0
         # Req. para: Over Gol HT, Over Gol FT e BTTS
