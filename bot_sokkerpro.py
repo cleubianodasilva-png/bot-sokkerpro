@@ -2821,7 +2821,7 @@ def run():
 
         # MERCADO 5: ESCANTEIO LIMITE HT (32-38 min, fav confirmado, empatando ou perdendo por 1, sem vermelho, APPM ≥ 1)
         if p == 1 and 32 <= m <= 38:
-            corner_cond = (fav_empatando or fav_perdendo_1)
+            corner_cond = corner_valido
             if not corner_cond:
                 print(f"[DIAG-CORNER-HT-BARRA] {h} x {a} — favorito não empata nem perde por 1 (fav_empatando={fav_empatando} fav_perdendo_1={fav_perdendo_1}), pulando")
             elif red_fav != 0:
@@ -2849,7 +2849,7 @@ def run():
 
         # MERCADO 6: ESCANTEIO LIMITE FT (82-88 min, fav confirmado, empatando ou perdendo por 1, sem vermelho)
         if p == 2 and 82 <= m <= 88:
-            corner_ft_cond = (fav_empatando or fav_perdendo_1)
+            corner_ft_cond = corner_valido
             if not corner_ft_cond:
                 print(f"[DIAG-CORNER-FT-BARRA] {h} x {a} — favorito não empata nem perde por 1 (fav_empatando={fav_empatando} fav_perdendo_1={fav_perdendo_1}), pulando")
             elif red_fav != 0:
