@@ -6,8 +6,8 @@
   },
   "CORNER_HT": {
     "green": 20,
-    "red": 0,
-    "total": 20
+    "red": 1,
+    "total": 21
   },
   "OVERGOAL": {
     "green": 11,
