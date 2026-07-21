@@ -1669,8 +1669,11 @@ def checar_resultado(sinal):
         if not fixture: return None
         
         status = fixture.get('status', '')
+        minute = int(fixture.get('minute', 0) or 0)
         is_final = status in ('FT', 'PEN')
-        is_2h = status == '2nd'
+        # So confirma HT se estiver no 2o tempo (minuto >= 50) ou status HT/2nd
+        # Evita confirmar durante acrescimos do 1T (minuto 45-49 com status 1st)
+        is_2h = (status in ('2nd', 'HT')) or (minute >= 50)
         
         if not (is_final or (mercado in ["HT", "LIMITEHT", "CORNER_HT"] and is_2h)):
             return None
