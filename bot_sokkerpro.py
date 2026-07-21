@@ -551,10 +551,11 @@ def gerar_layout_performance():
         f"{sep}\n"
         f"{f'{chr(10)}{sep}{chr(10)}'.join(blocos)}{chr(10)}"
         f"{sep}\n"
-        f"📌 <b>GERAL: {total_t} sinais | 🟢 {total_g} | 🔴 {total_r} | {total_pct:.1f}%</b>\n"
+        f"📌 <b>TOTAL GERAL: {total_t} Sinais</b>\n"
+        f"      | 🟢 {total_g} | 🔴 {total_r} | {total_pct:.1f}%|\n"
         f"{sep}\n"
         f"Regras de Validação:\n"
-        f"✅ Mínimo 1000 entradas + ≥70% acerto = Mercado VÁLIDO\n"
+        f"✅ Mínimo 1000 entradas + ≥70%\n"
         f"{sep}"
     )
     return msg
