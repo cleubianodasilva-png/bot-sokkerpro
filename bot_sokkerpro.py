@@ -455,9 +455,9 @@ MAPA_MERCADO = {
     "BTTS": "⚽🔥AMBAS MARCAM🔥⚽️",
     "OFT": "⚽🔥OVER 1.5 GOLS FT🔥⚽️",
     "OVERGOAL": "⚽🔥OVER GOL PARTIDA🔥⚽️",
-    "CORNER_HT": "🚩🔥ESCANTEIO LIMITE HT🔥🚩",
+    "CORNER_HT": "🚩🔥ESCANTEIO ÁSIAT/LMT HT🔥🚩",
     "CORNER_HT2": "⛳️🔥ESCANTEIO LIMITE HT🔥⛳️",
-    "CORNER_FT": "🚩🔥ESCANTEIO LIMITE FT🔥🚩"
+    "CORNER_FT": "🚩🔥ESCANTEIO ÁSIAT/LMT FT🔥🚩"
 }
 
 def _load_performance_github():
