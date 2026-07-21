@@ -536,7 +536,7 @@ def gerar_layout_performance():
         t = info["total"]
         pct = info["pct"]
         blocos.append(
-            f"{nome}\n"
+            f"<b>{nome}</b>\n"
             f"   ⏳ Total: {t} | 🟢 {g} | 🔴 {r}\n"
             f"   🎯 Acerto: {pct:.1f}%"
         )
@@ -547,11 +547,11 @@ def gerar_layout_performance():
 
     msg = (
         f"{sep}\n"
-        f"📊RELATÓRIO DE PERFORMANCE📊\n"
+        f"📊<b>RELATÓRIO DE PERFORMANCE</b>📊\n"
         f"{sep}\n"
         f"{f'\n{sep}\n'.join(blocos)}\n"
         f"{sep}\n"
-        f"📌 GERAL: {total_t} sinais | 🟢 {total_g} | 🔴 {total_r} | {total_pct:.1f}%\n"
+        f"📌 <b>GERAL: {total_t} sinais | 🟢 {total_g} | 🔴 {total_r} | {total_pct:.1f}%</b>\n"
         f"{sep}\n"
         f"Regras de Validação:\n"
         f"✅ Mínimo 1000 entradas + ≥70% acerto = Mercado VÁLIDO\n"
