@@ -746,7 +746,7 @@ def get_stats_apifootball_live(fid):
             elif tipo == "dangerous attacks":
                 stats["ataques_perigosos_h"], stats["ataques_perigosos_a"] = int(h_val), int(a_val)
             elif "possession" in tipo or "ball possession" in tipo:
-                stats["posse_h"], stats["posse_a"] = int(h_val), int(a_val)
+                stats["posse_h"], stats["posse_a"] = float(h_val), float(a_val)
         # Garantir chutes_tot se tivermos chutes_gol mas nao chutes_tot
         if "chutes_gol_h" in stats and "chutes_tot_h" not in stats:
             stats["chutes_tot_h"] = stats["chutes_gol_h"]
@@ -798,7 +798,7 @@ def get_stats_apifootball_v3(match_id):
             elif tipo == "dangerous attacks":
                 stats["ataques_perigosos_h"], stats["ataques_perigosos_a"] = int(h_val), int(a_val)
             elif "possession" in tipo or "ball possession" in tipo:
-                stats["posse_h"], stats["posse_a"] = int(h_val), int(a_val)
+                stats["posse_h"], stats["posse_a"] = float(h_val), float(a_val)
         if "chutes_gol_h" in stats and "chutes_tot_h" not in stats:
             stats["chutes_tot_h"] = stats["chutes_gol_h"]
             stats["chutes_tot_a"] = stats["chutes_gol_a"]
@@ -1059,7 +1059,7 @@ def get_odds_sokkerpro(fid_raw):
             elif tipo == "dangerous attacks":
                 stats["ataques_perigosos_h"], stats["ataques_perigosos_a"] = int(h_val), int(a_val)
             elif "possession" in tipo or "ball possession" in tipo:
-                stats["posse_h"], stats["posse_a"] = int(h_val), int(a_val)
+                stats["posse_h"], stats["posse_a"] = float(h_val), float(a_val)
         if "chutes_gol_h" in stats and "chutes_tot_h" not in stats:
             stats["chutes_tot_h"] = stats["chutes_gol_h"]
             stats["chutes_tot_a"] = stats["chutes_gol_a"]
