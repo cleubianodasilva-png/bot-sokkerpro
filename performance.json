@@ -35,8 +35,8 @@
     "total": 0
   },
   "CORNER_FT": {
-    "green": 0,
+    "green": 1,
     "red": 0,
-    "total": 0
+    "total": 1
   }
 }
