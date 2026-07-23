@@ -245,73 +245,43 @@ SENT_API_PATH        = "sent_live_signals.json"
 RESULTADO_API_PATH   = "resultados.json"
 PERFORMANCE_API_PATH = "performance.json"
 
-def _github_headers():
-    return {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28"
-    }
+def _git_commit_push(msg):
+    """Faz git add, commit e push de todos os arquivos de estado."""
+    import subprocess
+    try:
+        subprocess.run(["git", "config", "user.name", "bot-sokkerpro"], capture_output=True, timeout=10)
+        subprocess.run(["git", "config", "user.email", "bot@sokkerpro.com"], capture_output=True, timeout=10)
+        subprocess.run(["git", "add", SENT_API_PATH, "last_update.json", "sinais_pendentes.json", "resultados.json", "performance.json"], capture_output=True, timeout=10)
+        subprocess.run(["git", "commit", "-m", msg, "--author", "bot <bot@bot>"], capture_output=True, timeout=10)
+        subprocess.run(["git", "push", f"https://{GITHUB_TOKEN}@github.com/{GITHUB_REPO}.git"], capture_output=True, timeout=30)
+        print(f"[GIT] Commit+push OK: {msg}")
+    except Exception as e:
+        print(f"[GIT] Erro no commit+push: {e}")
 
 def load_sent():
-    """Carrega sent do GitHub (fonte de verdade) + arquivo local como fallback."""
-    # Tenta GitHub API primeiro
-    if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{SENT_API_PATH}"
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            if r.status_code == 200:
-                import base64 as _b64
-                data = json.loads(_b64.b64decode(r.json()["content"]).decode())
-                sent = set(data)
-                # Limpa chaves antigas (> 2 dias) para não crescer infinito
-                hoje = datetime.now(BRT).strftime('%Y%m%d')
-                ontem = (datetime.now(BRT) - timedelta(days=1)).strftime('%Y%m%d')
-                sent = {k for k in sent if hoje in k or ontem in k}
-                # Salva localmente também
-                with open(SENT_FILE, 'w') as f: json.dump(list(sent), f)
-                print(f"[SENT] Carregado do GitHub: {len(sent)} chaves")
-                return sent
-        except Exception as e:
-            print(f"[SENT] Erro GitHub load: {e}")
-    # Fallback: arquivo local
+    """Carrega sent do arquivo local (checkout mais recente do GitHub)."""
     if os.path.exists(SENT_FILE):
         try:
-            with open(SENT_FILE, 'r') as f: return set(json.load(f))
-        except: pass
+            with open(SENT_FILE, 'r') as f:
+                sent = set(json.load(f))
+            # Limpa chaves antigas (> 2 dias) para não crescer infinito
+            hoje = datetime.now(BRT).strftime('%Y%m%d')
+            ontem = (datetime.now(BRT) - timedelta(days=1)).strftime('%Y%m%d')
+            sent = {k for k in sent if hoje in k or ontem in k}
+            print(f"[SENT] Carregado do arquivo local: {len(sent)} chaves")
+            return sent
+        except Exception as e:
+            print(f"[SENT] Erro load local: {e}")
     return set()
 
 def save_sent(sent):
-    """Salva sent localmente E no GitHub (fonte de verdade)."""
+    """Salva sent localmente E no GitHub via git commit+push (fonte de verdade síncrona)."""
     with open(SENT_FILE, 'w') as f: json.dump(list(sent), f)
     if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            import base64 as _b64
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{SENT_API_PATH}"
-            # Pega SHA atual
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            sha = r.json().get("sha", "") if r.status_code == 200 else ""
-            content_b64 = _b64.b64encode(json.dumps(list(sent)).encode()).decode()
-            payload = {"message": "state: atualiza sent [skip ci]", "content": content_b64}
-            if sha: payload["sha"] = sha
-            r2 = requests.put(url, headers=_github_headers(), json=payload, timeout=10)
-            if r2.status_code in (200, 201):
-                print(f"[SENT] Salvo no GitHub: {len(sent)} chaves")
-            else:
-                print(f"[SENT] Erro GitHub save: {r2.status_code}")
-        except Exception as e:
-            print(f"[SENT] Erro GitHub save: {e}")
+        _git_commit_push("state: atualiza sent [skip ci]")
 
 def _load_sinais_github():
-    """Carrega sinais_pendentes.json do GitHub."""
-    import base64 as _b64
-    if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/sinais_pendentes.json"
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            if r.status_code == 200:
-                return json.loads(_b64.b64decode(r.json()["content"]).decode())
-        except Exception as e:
-            print(f"[SINAIS] Erro load GitHub: {e}")
+    """Carrega sinais_pendentes.json do arquivo local."""
     if os.path.exists(SINAIS_FILE):
         try:
             with open(SINAIS_FILE, 'r') as f: return json.load(f)
@@ -319,24 +289,11 @@ def _load_sinais_github():
     return []
 
 def _save_sinais_github(sinais):
-    """Salva sinais_pendentes.json no GitHub E localmente."""
-    import base64 as _b64
+    """Salva sinais_pendentes.json localmente + git commit+push."""
     with open(SINAIS_FILE, 'w') as f: json.dump(sinais, f)
     if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/sinais_pendentes.json"
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            sha = r.json().get("sha", "") if r.status_code == 200 else ""
-            content_b64 = _b64.b64encode(json.dumps(sinais).encode()).decode()
-            payload = {"message": "state: atualiza sinais_pendentes [skip ci]", "content": content_b64}
-            if sha: payload["sha"] = sha
-            r2 = requests.put(url, headers=_github_headers(), json=payload, timeout=10)
-            if r2.status_code in (200, 201):
-                print(f"[SINAIS] Salvo no GitHub: {len(sinais)} pendentes")
-            else:
-                print(f"[SINAIS] Erro GitHub save: {r2.status_code}")
-        except Exception as e:
-            print(f"[SINAIS] Erro save GitHub: {e}")
+        _git_commit_push("state: atualiza sinais_pendentes [skip ci]")
+    print(f"[SINAIS] Salvo localmente: {len(sinais)} pendentes")
 
 def registrar_sinal(fid, mercado, home, away, message_id, extra_val=None):
     sinais = _load_sinais_github()
@@ -349,19 +306,7 @@ def registrar_sinal(fid, mercado, home, away, message_id, extra_val=None):
     _save_sinais_github(sinais)
 
 def _load_resultados_github():
-    """Carrega resultados.json do GitHub. Retorna lista de registros."""
-    import base64 as _b64
-    if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{RESULTADO_API_PATH}"
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            if r.status_code == 200:
-                data = json.loads(_b64.b64decode(r.json()["content"]).decode())
-                if isinstance(data, list):
-                    return data
-        except Exception as e:
-            print(f"[RESULTADO] Erro load GitHub: {e}")
-    # Fallback local
+    """Carrega resultados.json do arquivo local."""
     if os.path.exists(RESULTADO_FILE):
         try:
             with open(RESULTADO_FILE, 'r') as f:
@@ -370,24 +315,11 @@ def _load_resultados_github():
     return []
 
 def _save_resultados_github(registros):
-    """Salva resultados.json no GitHub E localmente."""
-    import base64 as _b64
+    """Salva resultados.json localmente + git commit+push."""
     with open(RESULTADO_FILE, 'w') as f: json.dump(registros, f, indent=2)
     if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{RESULTADO_API_PATH}"
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            sha = r.json().get("sha", "") if r.status_code == 200 else ""
-            content_b64 = _b64.b64encode(json.dumps(registros, indent=2).encode()).decode()
-            payload = {"message": "state: atualiza resultados [skip ci]", "content": content_b64}
-            if sha: payload["sha"] = sha
-            r2 = requests.put(url, headers=_github_headers(), json=payload, timeout=10)
-            if r2.status_code in (200, 201):
-                print(f"[RESULTADO] Salvo no GitHub: {len(registros)} registros")
-            else:
-                print(f"[RESULTADO] Erro GitHub save: {r2.status_code}")
-        except Exception as e:
-            print(f"[RESULTADO] Erro save GitHub: {e}")
+        _git_commit_push("state: atualiza resultados [skip ci]")
+    print(f"[RESULTADO] Salvo localmente: {len(registros)} registros")
 
 def salvar_resultado(resultado, mercado=None):
     hoje = datetime.now(BRT).strftime("%Y-%m-%d")
@@ -454,18 +386,7 @@ MAPA_MERCADO = {
 }
 
 def _load_performance_github():
-    """Carrega performance.json do GitHub. Retorna dict {mercado: {green, red, total}}."""
-    import base64 as _b64
-    if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{PERFORMANCE_API_PATH}"
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            if r.status_code == 200:
-                data = json.loads(_b64.b64decode(r.json()["content"]).decode())
-                if isinstance(data, dict):
-                    return data
-        except Exception as e:
-            print(f"[PERFORMANCE] Erro load GitHub: {e}")
+    """Carrega performance.json do arquivo local."""
     if os.path.exists(PERFORMANCE_FILE):
         try:
             with open(PERFORMANCE_FILE, 'r') as f:
@@ -474,25 +395,12 @@ def _load_performance_github():
     return {}
 
 def _save_performance_github(perf):
-    """Salva performance.json no GitHub E localmente."""
+    """Salva performance.json localmente + git commit+push."""
     with open(PERFORMANCE_FILE, 'w') as f:
         json.dump(perf, f, indent=2)
     if GITHUB_TOKEN and GITHUB_REPO:
-        try:
-            import base64 as _b64
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{PERFORMANCE_API_PATH}"
-            r = requests.get(url, headers=_github_headers(), timeout=8)
-            sha = r.json().get("sha", "") if r.status_code == 200 else ""
-            content_b64 = _b64.b64encode(json.dumps(perf, indent=2).encode()).decode()
-            payload = {"message": "state: atualiza performance [skip ci]", "content": content_b64}
-            if sha: payload["sha"] = sha
-            r2 = requests.put(url, headers=_github_headers(), json=payload, timeout=10)
-            if r2.status_code in (200, 201):
-                print(f"[PERFORMANCE] Salvo no GitHub: {sum(v.get('total',0) for v in perf.values())} registros")
-            else:
-                print(f"[PERFORMANCE] Erro GitHub save: {r2.status_code}")
-        except Exception as e:
-            print(f"[PERFORMANCE] Erro save GitHub: {e}")
+        _git_commit_push("state: atualiza performance [skip ci]")
+    print(f"[PERFORMANCE] Salvo localmente: {sum(v.get('total',0) for v in perf.values())} registros")
 
 def registrar_performance(mercado, resultado):
     """Registra resultado de um mercado específico no performance.json."""
@@ -1701,19 +1609,12 @@ def checar_resultado(sinal):
 # COMANDOS TELEGRAM (/relatoriodiario e /radar)
 # ═══════════════════════════════════════════════════════════════════════════════
 def check_status_command(total_jogos_live=0, jogos_live=None, jogos_na_janela=None):
-    import base64 as _b64
     last_id = 0
-    # Lê last_update do GitHub para persistir entre execuções
-    if GITHUB_TOKEN and GITHUB_REPO:
+    # Lê last_update do arquivo local (checkout mais recente do GitHub)
+    if os.path.exists(LAST_UPDATE_FILE):
         try:
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/last_update.json"
-            r = requests.get(url, headers=_github_headers(), timeout=6)
-            if r.status_code == 200:
-                last_id = json.loads(_b64.b64decode(r.json()["content"]).decode()).get("last_id", 0)
-        except: pass
-    elif os.path.exists(LAST_UPDATE_FILE):
-        try:
-            with open(LAST_UPDATE_FILE, 'r') as f: last_id = json.load(f).get("last_id", 0)
+            with open(LAST_UPDATE_FILE, 'r') as f:
+                last_id = json.load(f).get("last_id", 0)
         except: pass
     try:
         sep = "━━━━━━━━━━━━━━━━━━━━"
@@ -1803,16 +1704,9 @@ def check_status_command(total_jogos_live=0, jogos_live=None, jogos_na_janela=No
                 radar_respondido = True
         if new_last_id > last_id:
             with open(LAST_UPDATE_FILE, 'w') as f: json.dump({"last_id": new_last_id}, f)
-            # Salva no GitHub para persistir entre execuções
-            import base64 as _b64
-            url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/last_update.json"
-            r_get = requests.get(url, headers=_github_headers(), timeout=6)
-            sha_lu = r_get.json().get("sha", "") if r_get.status_code == 200 else ""
-            content_b64 = _b64.b64encode(json.dumps({"last_id": new_last_id}).encode()).decode()
-            payload = {"message": "state: last_update [skip ci]", "content": content_b64}
-            if sha_lu: payload["sha"] = sha_lu
-            r_put = requests.put(url, headers=_github_headers(), json=payload, timeout=8)
-            print(f"[CMD] last_id salvo: {new_last_id} | status: {r_put.status_code} | token_ok: {bool(GITHUB_TOKEN)}")
+            if GITHUB_TOKEN and GITHUB_REPO:
+                _git_commit_push("state: last_update [skip ci]")
+            print(f"[CMD] last_id salvo: {new_last_id}")
     except Exception as e:
         print(f"[CMD] Erro ao processar comandos: {e}")
 
