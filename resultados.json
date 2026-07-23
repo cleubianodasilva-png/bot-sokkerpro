@@ -442,5 +442,11 @@
     "resultado": "red",
     "mercado": "CORNER_FT",
     "timestamp": "2026-07-23T18:00:31.665755-03:00"
+  },
+  {
+    "data": "2026-07-23",
+    "resultado": "red",
+    "mercado": "BTTS",
+    "timestamp": "2026-07-23T18:10:22.394088-03:00"
   }
 ]
