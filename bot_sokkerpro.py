@@ -1512,7 +1512,7 @@ def msg_universal(home, away, minuto, liga, pais, n, mercado, entrada, placar, e
         "inline_keyboard": [
             [
                 {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
-                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
+                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/mobile?bf=667237b941dd4_5426307053"}
             ]
         ]
     }
@@ -1521,7 +1521,7 @@ def msg_universal(home, away, minuto, liga, pais, n, mercado, entrada, placar, e
         "inline_keyboard": [
             [
                 {"text": "🟣BET365🟣", "url": "https://www.bet365.bet.br/#/AX/"},
-                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/en/live/football/"}
+                {"text": "🔵PARIPESA🔵", "url": "https://paripesa.com/mobile?bf=667237b941dd4_5426307053"}
             ]
         ]
     }
