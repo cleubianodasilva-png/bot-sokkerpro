@@ -815,11 +815,17 @@ def get_jogos_apifootball_v3(fids_existentes):
         return []
 
 
+_CACHED_DATA = None
+
 def _get_data():
-    """Sempre busca dados frescos do SokkerPro (sem cache)."""
+    """Busca dados do SokkerPro com cache — UMA chamada HTTP por execução."""
+    global _CACHED_DATA
+    if _CACHED_DATA is not None:
+        return _CACHED_DATA
     try:
         r = requests.get(SOKKERPRO_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-        return r.json()
+        _CACHED_DATA = r.json()
+        return _CACHED_DATA
     except Exception as e:
         print(f"[SKP] Erro ao buscar dados: {e}")
         return None
@@ -1487,6 +1493,7 @@ def msg_universal(home, away, minuto, liga, pais, n, mercado, entrada, placar, e
 
     if "CORNER" in mercado or "ESCANTEIO" in mercado:
         nome_m = mercado.replace('CORNER_', 'ESCANTEIO ÁSIAT/LMT ')
+        title = f"🚩🔥{nome_m}🔥🚩"
     else:
         titles_map = {
             "HT": "OVER GOL INTERVALO",
