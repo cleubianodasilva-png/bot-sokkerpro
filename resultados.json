@@ -706,5 +706,11 @@
     "resultado": "red",
     "mercado": "CORNER_FT",
     "timestamp": "2026-07-24T08:30:35.101066-03:00"
+  },
+  {
+    "data": "2026-07-24",
+    "resultado": "red",
+    "mercado": "CORNER_FT",
+    "timestamp": "2026-07-24T08:30:37.706107-03:00"
   }
 ]
