@@ -2040,7 +2040,7 @@ def run():
         if not hist_ok:
             print(f"[HIST-BLOQUEADO] {h} x {a} — média {media_hist:.1f} < 2.2, pulando mercados de gol")
 
-        # MERCADO 1: OVER 0.5 HT (15-27 min, 0x0, favorito empatando, sem vermelho do fav, média hist ≥ 2.2)
+        # MERCADO 1: OVER 0.5 HT (15-27 min, 0x0, favorito empatando, sem vermelho do fav, chutes alvo ≥ 2, chutes tot ≥ 5, média hist ≥ 2.2)
         if p == 1 and 15 <= m <= 27:
             if not (sh == 0 and sa == 0):
                 print(f"[DIAG-HT-BARRA] {h} x {a} — placar não é 0x0 ({placar}), pulando")
@@ -2050,6 +2050,12 @@ def run():
                 print(f"[DIAG-HT-BARRA] {h} x {a} — favorito com cartão vermelho ({red_fav}), pulando")
             elif not appm_gols_ok:
                 print(f"[DIAG-HT-BARRA] {h} x {a} — APPM insuficiente (casa={_appm_h} fora={_appm_a}, precisa ≥0.7 casa ou fora), pulando")
+            elif not (stats.get('chutes_gol_h', 0) + stats.get('chutes_gol_a', 0) >= 2):
+                _cg = stats.get('chutes_gol_h', 0) + stats.get('chutes_gol_a', 0)
+                print(f"[DIAG-HT-BARRA] {h} x {a} — chutes no alvo insuficientes ({_cg} < 2), pulando")
+            elif not (stats.get('chutes_tot_h', 0) + stats.get('chutes_tot_a', 0) >= 5):
+                _ct = stats.get('chutes_tot_h', 0) + stats.get('chutes_tot_a', 0)
+                print(f"[DIAG-HT-BARRA] {h} x {a} — chutes totais insuficientes ({_ct} < 5), pulando")
             elif not hist_ok:
                 print(f"[DIAG-HT-BARRA] {h} x {a} — média histórica {media_hist:.1f} < 2.2, pulando")
             else:
